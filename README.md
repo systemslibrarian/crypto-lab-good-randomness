@@ -172,9 +172,10 @@ npm install
 npm run dev
 ```
 
-No environment variables are required. `npm run build` typechecks and builds; `npm test` runs the
-unit suite; `npm run test:a11y` and `npm run test:claims` run the two browser suites against the
-production build.
+No environment variables are required. `npm run build` re-derives the pinned vectors with an independent
+implementation, typechecks, and builds — in that order, so a bad vector cannot reach a bundle;
+`npm test` runs the unit suite; `npm run test:a11y` and `npm run test:claims` run the two browser
+suites against the production build.
 
 ## Build & Verify
 
@@ -204,7 +205,10 @@ killed**.
 Appendix A.1 vector 4, from offset 44 onward. A unit test comparing this lab's cipher against a
 bad vector reports a failure and cannot say which side is at fault. So `scripts/check-vectors.mjs`
 re-derives every committed value with **Node's OpenSSL ChaCha20**, an implementation sharing not
-one line with this repository, and runs first in CI — before the typecheck. A failure there means
+one line with this repository. It is the first thing `npm run build` does, so every build and
+every browser suite runs it, and CI *also* runs it as its own named step before the typecheck —
+which is not redundant: as a named step it fails saying `Pinned vectors` rather than failing
+inside a step called `Build`. A failure there means
 the *data* is wrong; a failure in the unit suite means the *lab* is. That split is what caught it.
 The script pins its own oracle first: OpenSSL's `chacha20` takes a 16-byte IV (a little-endian
 counter followed by the nonce) where the RFC states a separate counter word, so it checks the

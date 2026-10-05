@@ -2,7 +2,11 @@
 /*
  * check-vectors.mjs — re-derive every pinned vector with an INDEPENDENT ChaCha20.
  *
- * Run: npm run check-vectors   (and in CI, before anything else)
+ * Run: it is the first thing `npm run build` does, so every build and every browser
+ * suite runs it. CI ALSO runs it as its own step before the typecheck, which is not
+ * redundant: as a named step it fails first and says `Pinned vectors` rather than
+ * failing inside a step called `Build`, and the whole point of this script is that a
+ * disagreement should name the DATA rather than the lab.
  *
  * The vectors in src/crypto/vectors.json were transcribed BY HAND from RFC 8439.
  * A hand transcription of 64 bytes of hex is exactly the kind of thing that is
