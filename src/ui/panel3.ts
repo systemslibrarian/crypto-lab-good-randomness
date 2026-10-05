@@ -136,14 +136,34 @@ export function mountPanel3(): void {
     );
   }
 
+  /**
+   * Run a search with every control that could move the ground inert.
+   *
+   * STEP 2'S BUTTON IS IN HERE, and that is the part worth explaining. Disabling
+   * Step 3's own three controls stops two searches overlapping, which is obvious.
+   * Step 2's "Make two keys" is the one that actually bites: a search holds the
+   * ciphertext it was given in a local, so new keys made halfway through would let
+   * the run finish against the OLD message and then render its verdict — and the
+   * verdict would record the NEW keys as its basis, because `render` reads the basis
+   * at render time. `retireStale` would then compare the new basis against itself,
+   * find no change, and leave a stale result standing as a fresh one.
+   *
+   * That is the exact defect the retirement machinery exists to prevent, arriving
+   * through the one door it cannot watch: a basis captured after the inputs moved is
+   * indistinguishable from a basis that never moved. The fix is to stop the inputs
+   * moving, not to make the comparison cleverer.
+   */
   async function withBusy(run: () => Promise<void>): Promise<void> {
-    const controls = buttons();
+    const controls = [...buttons(), byId<HTMLButtonElement>('make-keys')];
     for (const b of controls) b.disabled = true;
     byId('panel-3').setAttribute('aria-busy', 'true');
     try {
       await run();
     } finally {
       byId('panel-3').removeAttribute('aria-busy');
+      // `settled()` re-enables every gated control from its own prerequisite, and
+      // `make-keys` is not gated, so it is restored here.
+      byId<HTMLButtonElement>('make-keys').disabled = false;
       settled();
     }
   }

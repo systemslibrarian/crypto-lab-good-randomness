@@ -800,6 +800,33 @@ test.describe('a result always describes inputs that are still on screen', () =>
     expect((await statusOf(page))['guess']).toBe('fresh');
   });
 
+  test('nothing can move the ground under a running search', async ({ page }) => {
+    await boot(page, 'dark');
+    await makeKeys(page);
+    // Start the sweep and, WITHOUT waiting for it, check that every control which
+    // could change what it is searching is inert. This is not a tidiness assertion:
+    // a search holds its ciphertext in a local, so new keys made halfway through
+    // would let it finish against the old message and then record the NEW keys as
+    // its basis — and a basis captured after the inputs moved is indistinguishable
+    // from one that never moved, so `retireStale` would leave a stale result
+    // standing as a fresh one. The retirement machinery cannot see this door; it is
+    // held shut instead.
+    const sweep = page.getByRole('button', { name: /Try all/ }).click();
+    await expect(page.locator('#panel-3')).toHaveAttribute('aria-busy', 'true');
+    for (const id of ['make-keys', 'try-guess', 'search-seeded', 'search-real']) {
+      await expect(page.locator(`#${id}`), `#${id} must be inert during a search`).toBeDisabled();
+    }
+    await sweep;
+    await page.waitForSelector('[data-verdict="recovered"]');
+    // And everything comes back afterwards, including the ungated Step 2 button —
+    // which `settled()` does not restore, because it only re-enables controls that
+    // declare a prerequisite.
+    await expect(page.locator('#panel-3')).not.toHaveAttribute('aria-busy', 'true');
+    for (const id of ['make-keys', 'try-guess', 'search-seeded', 'search-real']) {
+      await expect(page.locator(`#${id}`)).toBeEnabled();
+    }
+  });
+
   test('a [hidden] element really is not rendered', async ({ page }) => {
     await boot(page, 'dark');
     // The `[hidden]` cascade trap: a class rule setting `display` outranks the UA's

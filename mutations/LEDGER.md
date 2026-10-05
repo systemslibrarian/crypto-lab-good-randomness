@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T04:35:53.888Z.
+Generated 2026-10-05T04:41:17.189Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 
@@ -16,19 +16,19 @@ Generated 2026-10-05T04:35:53.888Z.
 3. the run served the MUTATED code (bundle hash moved, and the red run is not a build or server failure)
 4. a patch that does not compile is DOES NOT BUILD and is never a kill
 
-Unmutated bundle `c3c92da434c0742e`; restored bundle `c3c92da434c0742e` (matches).
+Unmutated bundle `f3a6eb928557c9b9`; restored bundle `f3a6eb928557c9b9` (matches).
 
 ## Results
 
 | Mutation | Verdict | Outcome | Bundle moved | Owning test |
 |---|---|---|---|---|
-| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | c3c92da434c0742e → 43775807954752b4 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | c3c92da434c0742e → 26ed965c1745de25 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | c3c92da434c0742e → 0d60a70c3ee6577d | the obviously bad generator is caught, and the page counts what it still passed |
-| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | c3c92da434c0742e → 0e3f2276463cde30 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | c3c92da434c0742e → 01472249e3b1d8a1 | every check passes, and the key is recovered anyway |
-| `M6-fixture-check-broken` | `recovered` | **KILLED** | c3c92da434c0742e → ef0c8e3dd5e99565 | every check passes, and the key is recovered anyway |
-| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | c3c92da434c0742e → 8d634314cb7c1f28 | the same search against the real key finds nothing, and proves it did the work |
+| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | f3a6eb928557c9b9 → f40266730c9c63e2 | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | f3a6eb928557c9b9 → ced8413eabdcb4d4 | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | f3a6eb928557c9b9 → d99b9d2ea3d3ff51 | the obviously bad generator is caught, and the page counts what it still passed |
+| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 71fcc8c4d760078e | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 75d8ba86d08a128f | every check passes, and the key is recovered anyway |
+| `M6-fixture-check-broken` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 680f5be1f1b78766 | every check passes, and the key is recovered anyway |
+| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | f3a6eb928557c9b9 → 60608b262a25467e | the same search against the real key finds nothing, and proves it did the work |
 
 ## Each mutation in full
 
@@ -46,7 +46,7 @@ PINNED TO SEED 0001, which is deliberate and is the difference between a determi
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 43775807954752b4.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → f40266730c9c63e2.
 
 ```
 Error: Unsupported state or unable to authenticate data
@@ -72,7 +72,7 @@ The page's own did-not-find branch exists for a build that is broken, and it say
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 26ed965c1745de25.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → ced8413eabdcb4d4.
 
 ```
 Error: the recovery must name the PIN it found
@@ -96,7 +96,7 @@ The row still prints its real measurement, which is what makes this a good mutat
 
 **Owning test.** `the obviously bad generator is caught, and the page counts what it still passed` — asserts the `visible-pattern` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 0d60a70c3ee6577d.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → d99b9d2ea3d3ff51.
 
 ```
 Error: expect(locator).toHaveClass(expected) failed
@@ -123,7 +123,7 @@ The patch keeps `keystream` and `ZERO_NONCE` used, through a `void`, because `no
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 0e3f2276463cde30.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 71fcc8c4d760078e.
 
 ```
 Error: the recovery must name the PIN it found
@@ -145,7 +145,7 @@ Received: undefined
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 01472249e3b1d8a1.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 75d8ba86d08a128f.
 
 ```
 Error: expect(locator).toContainText(expected) failed
@@ -170,7 +170,7 @@ The bound is moved to 33 rather than narrowed, and that is the deterministic cho
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → ef0c8e3dd5e99565.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 680f5be1f1b78766.
 
 ```
 Error: expect(locator).toHaveCount(expected) failed
@@ -197,7 +197,7 @@ The page catches it honestly rather than rendering it as a result. Its real-key 
 
 **Owning test.** `the same search against the real key finds nothing, and proves it did the work` — asserts the `no-seed` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle c3c92da434c0742e → 8d634314cb7c1f28.
+**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 60608b262a25467e.
 
 ```
 Error: expect(locator).toHaveAttribute(expected) failed

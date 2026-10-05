@@ -142,6 +142,12 @@ watch it find nothing. Everything runs in your browser; nothing is sent anywhere
   environment as unavailable instead of quietly carrying on.
 - **Trusting a statistical test battery as evidence of a good seed.** It is evidence about
   output. A guessable seed is a property of the process.
+- **A result that outlived its inputs.** Not a cryptographic failure, but the quiet way a demo
+  starts lying: every verdict here records what it was computed from and is replaced by a
+  retirement notice when that changes. One door the comparison cannot watch is a search still
+  running while the keys are remade — a basis captured *after* the inputs moved is
+  indistinguishable from one that never moved — so Step 2's button is held inert for the
+  duration rather than the comparison being made cleverer.
 - **Two machines with the same starting state.** Out of scope here and the subject of **Entropy
   Collapse**; this lab is the one that establishes why it matters.
 
@@ -172,7 +178,7 @@ production build.
 
 ## Build & Verify
 
-**68 unit tests** (8 files) + **31 claims tests** + **3 accessibility drives** + **10 pinned
+**68 unit tests** (8 files) + **32 claims tests** + **3 accessibility drives** + **10 pinned
 vectors re-derived by an independent implementation on every build** + **7 mutations, all
 killed**.
 
@@ -205,7 +211,7 @@ counter followed by the nonce) where the RFC states a separate counter word, so 
 §2.3.2 case and exits with a distinct code if its own packing is wrong, rather than reporting ten
 transcription errors.
 
-**The claims suite** (`e2e/claims.spec.ts`, 31 tests) checks what the page *says*. The strongest
+**The claims suite** (`e2e/claims.spec.ts`, 32 tests) checks what the page *says*. The strongest
 is an independent re-derivation: with the PIN, the nonce and the ciphertext all on screen, the
 test rebuilds the key with **OpenSSL's ChaCha20** and opens the message with **OpenSSL's
 AES-256-GCM**, through `node:crypto`. A build whose hand-rolled cipher was wrong in a
@@ -291,7 +297,7 @@ actually asserted, and an `afterAll` in that spec fails any full claims run in w
 kill's own test ran without asserting the marker the record names — so a kill can only stay
 recorded while the assertion that produced it still exists. That enforcement was itself proved by
 corrupting one record's marker and re-running: the suite failed naming
-`M3-look-random-check-hardwired-to-pass` **while all 31 tests passed**, which is the right
+`M3-look-random-check-hardwired-to-pass` **while every test passed**, which is the right
 subject for a false record. Restored, the suite is green again.
 
 ## Performance
