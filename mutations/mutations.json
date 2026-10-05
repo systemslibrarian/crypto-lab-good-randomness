@@ -23,12 +23,34 @@
     "they no longer use for exactly that reason: `noUnusedLocals` would otherwise turn a",
     "mutation into a build failure.",
     "",
+    "EVERY PATCH IS CHOSEN TO COMPILE. A patch that does not build is recorded as DOES",
+    "NOT BUILD and is never a kill, because the suite would then run against the last",
+    "good bundle and pass having proved nothing. Two of them carry a `void` of a value",
+    "they no longer use for exactly that reason: `noUnusedLocals` would otherwise turn a",
+    "mutation into a build failure.",
+    "",
     "EVERY PATCH IS ALSO CHOSEN TO BE DETERMINISTIC, which took more care here than in",
     "most labs. The PIN behind Source B is drawn at mount from one of four candidates, so",
     "a mutation that happened to name a candidate would coincide with the real PIN one",
     "run in four and be recorded as SURVIVED. M1 is pinned to a seed OUTSIDE that set for",
     "that reason, and M6 moves a threshold past the end of its own range rather than",
-    "narrowing it."
+    "narrowing it.",
+    "",
+    "WHY THERE IS NO MUTATION FOR `same-again`, THE DETERMINISM VERDICT IN STEP 1. It is",
+    "the first claim the lab makes and it would be the obvious eighth entry. It was tried,",
+    "and the result is recorded here rather than left as a judgement: `const identical =",
+    "true` in place of the comparison was applied, the build succeeded, and the owning",
+    "test PASSED. On a correct build the two rolls ARE identical, so the page renders",
+    "exactly what it renders now.",
+    "",
+    "That is not a hole in the test. It is §4.1c's own rule that a surviving mutation can",
+    "be evidence about the SOURCE rather than about the tests, and here the branch is",
+    "simply unreachable while the generator is correct. The state in which that verdict",
+    "could lie is a build whose generator is NOT deterministic -- and M4 is that build.",
+    "Driven under M4, Step 1 renders THE DICE CHANGED in the `alarm` tone, which was",
+    "confirmed by running it. So the verdict IS covered; it is covered by the mutation",
+    "that can actually reach it. Writing an eighth entry that could only ever be recorded",
+    "as SURVIVED would make the ledger's kill count worse evidence, not better."
   ],
   "mutations": [
     {
@@ -137,6 +159,23 @@
       "marker": "recovered",
       "project": "claims",
       "expectOnPage": "The fixture reached, the key recovered — and both key columns reading 3 of 4 checks passed, with the lopsided row in alarm."
+    },
+    {
+      "id": "M7-real-key-panel-searches-the-seeded-ciphertext",
+      "verdict": "no-seed",
+      "what": "Step 3's real-key panel runs its search against Source B's ciphertext instead of Source A's.",
+      "why": "The one UI wiring defect on this page that would be genuinely dangerous, and the subtlest to notice: nothing about the code looks wrong, the search runs, the counter reaches ten thousand, and the panel is handed a real result. It simply searched the wrong message. The page would then report that a key from `crypto.getRandomValues` had been recovered by guessing a four-digit PIN -- which is the exact opposite of what this lab exists to teach, stated in the lab's own voice.\n\nNo unit test can see it, because nothing cryptographic is wrong: `searchPins` behaves perfectly on the input it was given. The browser verdict is the only witness, which is what §4.1c's forward-looking rule is for.\n\nThe page catches it honestly rather than rendering it as a result. Its real-key panel distinguishes the expected outcome from every other one and paints anything else in the `fail` tone, so the mutation surfaces as a build defect rather than as a lesson.",
+      "patches": [
+        {
+          "file": "src/ui/panel3.ts",
+          "anchor": "      const sealed = state.sealedReal;",
+          "replacement": "      /* MUTATION M7: the real-key panel searches the SEEDED ciphertext. */\n      const sealed = state.sealedSeeded;"
+        }
+      ],
+      "owningTest": "the same search against the real key finds nothing, and proves it did the work",
+      "marker": "no-seed",
+      "project": "claims",
+      "expectOnPage": "THE SEARCH FOUND SOURCE A, in the `fail` tone — a page claiming to have guessed an operating-system key."
     }
   ]
 }

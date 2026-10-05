@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T04:23:08.970Z.
+Generated 2026-10-05T04:30:14.736Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 
@@ -28,6 +28,7 @@ Unmutated bundle `0530f93f8c37a4a2`; restored bundle `0530f93f8c37a4a2` (matches
 | `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | 0530f93f8c37a4a2 → b4c1a2233fa0b05e | the recovered key is real: rebuilt and the message opened by OpenSSL |
 | `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | 0530f93f8c37a4a2 → 46d0be5df9cf8fc0 | every check passes, and the key is recovered anyway |
 | `M6-fixture-check-broken` | `recovered` | **KILLED** | 0530f93f8c37a4a2 → 76221d341e70d71c | every check passes, and the key is recovered anyway |
+| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | 0530f93f8c37a4a2 → f914931ee8b3709d | the same search against the real key finds nothing, and proves it did the work |
 
 ## Each mutation in full
 
@@ -176,6 +177,33 @@ Error: expect(locator).toHaveCount(expected) failed
 Locator:  locator('.check-row-ok')
 Expected: 8
 Received: 6
+Timeout:  5000ms
+Call log:
+```
+
+### `M7-real-key-panel-searches-the-seeded-ciphertext`
+
+**What it changes.** Step 3's real-key panel runs its search against Source B's ciphertext instead of Source A's.
+
+**Why this one.** The one UI wiring defect on this page that would be genuinely dangerous, and the subtlest to notice: nothing about the code looks wrong, the search runs, the counter reaches ten thousand, and the panel is handed a real result. It simply searched the wrong message. The page would then report that a key from `crypto.getRandomValues` had been recovered by guessing a four-digit PIN -- which is the exact opposite of what this lab exists to teach, stated in the lab's own voice.
+
+No unit test can see it, because nothing cryptographic is wrong: `searchPins` behaves perfectly on the input it was given. The browser verdict is the only witness, which is what §4.1c's forward-looking rule is for.
+
+The page catches it honestly rather than rendering it as a result. Its real-key panel distinguishes the expected outcome from every other one and paints anything else in the `fail` tone, so the mutation surfaces as a build defect rather than as a lesson.
+
+**What the page then shows.** THE SEARCH FOUND SOURCE A, in the `fail` tone — a page claiming to have guessed an operating-system key.
+
+**Patch sites.** `src/ui/panel3.ts` (1 site, each anchored on text that occurs exactly once).
+
+**Owning test.** `the same search against the real key finds nothing, and proves it did the work` — asserts the `no-seed` verdict marker.
+
+**Outcome: KILLED.** Baseline passed: true. Bundle 0530f93f8c37a4a2 → f914931ee8b3709d.
+
+```
+Error: expect(locator).toHaveAttribute(expected) failed
+Locator:  locator('[data-verdict="no-seed"]')
+Expected: "held"
+Received: "fail"
 Timeout:  5000ms
 Call log:
 ```

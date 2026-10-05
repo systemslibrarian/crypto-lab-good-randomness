@@ -173,7 +173,8 @@ production build.
 ## Build & Verify
 
 **68 unit tests** (8 files) + **31 claims tests** + **3 accessibility drives** + **10 pinned
-vectors re-derived by an independent implementation on every build**.
+vectors re-derived by an independent implementation on every build** + **7 mutations, all
+killed**.
 
 **Correctness, in three independent layers.**
 
@@ -262,11 +263,28 @@ was written by the run that produced it, never typed.**
 | the seeded generator is quietly swapped for the CSPRNG | `recovered` | KILLED |
 | the negative-claim text is deleted | `recovered` | KILLED |
 | a check inside the negative-claim fixture is broken | `recovered` | KILLED |
+| the real-key panel searches the seeded ciphertext | `no-seed` | KILLED |
 
-The first four are the ones the build brief names. The last two are what §4.1d requires of any
+The first four are the ones the build brief names. The next two are what §4.1d requires of any
 negative claim: delete the claim text and the assertion that it is on screen must fail; break a
 check inside the fixture and the assertion that everything is green must fail. A negative-claim
 test that survives both is decorative.
+
+The seventh is the one wiring defect on this page that would be genuinely dangerous: the real-key
+panel pointed at the wrong ciphertext, so the page reports that a key from
+`crypto.getRandomValues` fell to a four-digit PIN — the exact opposite of what the lab teaches, in
+the lab's own voice. No unit test can see it, because nothing cryptographic is wrong.
+
+**One verdict has no mutation of its own, and the ledger says why rather than leaving the gap
+unexplained.** Step 1's determinism verdict is the first claim the lab makes, so it was the
+obvious eighth entry. It was tried: replacing the comparison with `const identical = true` built
+cleanly and the owning test **passed**, because on a correct build the two rolls really are
+identical and the page renders exactly what it renders now. That is §4.1c's "the branch may be
+unreachable" case — evidence about the source rather than about the tests. The build in which
+that verdict could lie is one whose generator is not deterministic, and M4 is that build: driven
+under it, Step 1 renders `THE DICE CHANGED` in the alarm tone, confirmed by running it. The
+verdict is covered by the mutation that can actually reach it, and an eighth entry that could
+only ever be recorded as SURVIVED would make the kill count worse evidence, not better.
 
 The ledger is **enforced, not archived**. Each claims test records the (test, marker) pair it
 actually asserted, and an `afterAll` in that spec fails any full claims run in which a recorded
