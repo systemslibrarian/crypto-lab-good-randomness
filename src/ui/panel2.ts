@@ -43,6 +43,19 @@ import { settled } from './settle';
 const BROKEN_LABEL = 'a counter, starting at zero';
 const brokenBytes = (): Bytes => new Uint8Array(Array.from({ length: 32 }, (_, i) => i)) as Bytes;
 
+/**
+ * Icon AND text AND colour for each mark (WCAG 1.4.1).
+ *
+ * `pending` takes the question mark rather than a tick, because "not searched yet"
+ * establishes nothing and must not read as a clean bill of health — which is exactly
+ * what it did when this column borrowed its neighbour's result.
+ */
+const MARK_GLYPH: Record<MarkKind, () => SVGElement> = {
+  recovered: warn,
+  untouched: tick,
+  pending: question,
+};
+
 /** One of the four candidate PINs, chosen by the real source. */
 function choosePin(): string {
   const pick = realKey()[0]! % CANDIDATE_PINS.length;
@@ -57,12 +70,18 @@ function choosePin(): string {
  * by the absence of colour and a reader who cannot see colour must get the whole
  * distinction from the text (WCAG 1.4.1).
  */
+type MarkKind = 'recovered' | 'untouched' | 'pending';
+interface Mark {
+  readonly word: string;
+  readonly kind: MarkKind;
+}
+
 function column(opts: {
   readonly id: string;
   readonly title: string;
   readonly where: string;
   readonly bytes: Bytes;
-  readonly mark: { readonly word: string; readonly kind: 'recovered' | 'untouched' } | null;
+  readonly mark: Mark | null;
 }): HTMLElement {
   const checks = runChecks(opts.bytes);
   const hex = toGroupedHex(opts.bytes);
@@ -79,7 +98,7 @@ function column(opts: {
       ...(opts.mark
         ? [
             el('p', { class: `key-col-mark key-col-mark-${opts.mark.kind}` }, [
-              opts.mark.kind === 'recovered' ? warn() : tick(),
+              MARK_GLYPH[opts.mark.kind](),
               el('span', {}, [opts.mark.word]),
             ]),
           ]
@@ -167,7 +186,11 @@ export function mountPanel2(): void {
     // looking at. Sealing them in Step 3 instead would let the two panels drift apart.
     state.sealedSeeded = await seal(seededBytesValue, 'seeded', state.secret);
     state.sealedReal = await seal(realBytesValue, 'real', state.secret);
+    // BOTH results are cleared, not just Source B's. A new pair means both searches
+    // are about keys that no longer exist, and a Source A result that survived the
+    // regeneration would be the same lie in slower motion.
     state.recovered = null;
+    state.realSearch = null;
 
     fill(guessOut);
     renderLookRandom();
@@ -188,7 +211,34 @@ export function mountPanel2(): void {
     const realChecks = runChecks(keys.real.bytes);
     const seededChecks = runChecks(keys.seeded.bytes);
     const bothPass = allPassed(realChecks) && allPassed(seededChecks);
-    const resolved = state.recovered !== null;
+
+    /*
+     * EACH COLUMN REPORTS ITS OWN EXPERIMENT, and this is the part that was wrong.
+     *
+     * A single `resolved` flag — "Source B has been recovered" — used to drive BOTH
+     * marks, so recovering Source B stamped Source A with "Ten thousand guesses found
+     * nothing here" when no search against Source A had run. The page announced the
+     * outcome of an experiment it had not performed. In this lab of all labs that is
+     * the worst available defect: the whole argument is that a check which has not
+     * looked must not read like a check that looked and found nothing.
+     *
+     * So a column is marked only by its own result. A column whose search has not run
+     * says NOT SEARCHED YET, and only once its neighbour has a result — before that,
+     * neither is marked at all, which is the trap the build brief requires.
+     */
+    const bMark: Mark | null = state.recovered
+      ? { word: `Recovered — the PIN was ${state.recovered.seed}`, kind: 'recovered' }
+      : null;
+    const aMark: Mark | null = state.realSearch
+      ? state.realSearch.found
+        ? { word: `Recovered — the PIN was ${state.realSearch.found.seed}`, kind: 'recovered' }
+        : {
+            word: `${state.realSearch.tried.toLocaleString('en-GB')} guesses found nothing here`,
+            kind: 'untouched',
+          }
+      : null;
+    const eitherSearched = bMark !== null || aMark !== null;
+    const pending: Mark = { word: 'Not searched yet', kind: 'pending' };
 
     const columns = el('div', { class: 'key-cols' }, [
       column({
@@ -196,18 +246,14 @@ export function mountPanel2(): void {
         title: 'Source A',
         where: 'The browser’s own random source',
         bytes: keys.real.bytes,
-        mark: resolved
-          ? { word: 'Ten thousand guesses found nothing here', kind: 'untouched' }
-          : null,
+        mark: aMark ?? (eitherSearched ? pending : null),
       }),
       column({
         id: 'seeded',
         title: 'Source B',
         where: `A real stream cipher, started from a ${PIN_DIGITS}-digit PIN`,
         bytes: keys.seeded.bytes,
-        mark: resolved
-          ? { word: `Recovered — the PIN was ${state.recovered!.seed}`, kind: 'recovered' }
-          : null,
+        mark: bMark ?? (eitherSearched ? pending : null),
       }),
     ]);
 
@@ -221,42 +267,99 @@ export function mountPanel2(): void {
         '— one of four, shown in Step 3, picked without telling you which.',
       bothPass
         ? 'Both passed all four checks. Read them side by side for as long as you like: ' +
-          'nothing in either column tells you which is which, and nothing in the bytes ' +
-          'themselves ever will.'
+          'nothing in either column tells you which is which, and no check of how the ' +
+          'bytes LOOK is going to.'
         : 'Read the rows side by side. Whatever they say, notice what they are NOT able to ' +
           'tell you: which of these two a stranger could work out.',
       'Looking random is not evidence of anything. Step 3 is where that stops being an ' +
-        'assertion.',
+        'assertion — and the check that does work there is not a check of the bytes at ' +
+        'all. It is trying the starting points.',
     ];
 
-    // Built lazily. An eagerly-evaluated array here reads `state.recovered!.seed`
-    // whichever branch is taken, which threw on the very first render of this panel
-    // and left Panel 2 blank with no verdict at all. The non-null assertion was the
-    // tell: it was true inside the branch that uses the value and false everywhere
-    // else, and an array literal is not a branch.
-    const resolvedDetail = (): string[] => [
-      `Step 3 has answered it. Source B’s key was rebuilt from the PIN ` +
-        `${state.recovered!.seed}, out of ${PIN_SPACE.toLocaleString('en-GB')} — and ` +
-        'the same search against Source A came back with nothing.',
-      bothPass
-        ? 'Both columns passed all four checks before that happened, and they still do. ' +
-          'Nothing about the bytes changed; the only thing that changed is that you now ' +
-          'know. The colours on this panel were put there by Step 3, not by the checks.'
-        : 'The checks said what they said before that happened, and they still do. The ' +
-          'colours on this panel were put there by Step 3, not by the checks.',
-    ];
+    /*
+     * Built lazily, for two reasons.
+     *
+     * The first is a bug this file already had: an eagerly-evaluated array reads
+     * `state.recovered!.seed` whichever branch is taken, which threw on the very first
+     * render and left Panel 2 blank with no verdict at all. The non-null assertion was
+     * the tell — true inside the branch that uses the value, false everywhere else,
+     * and an array literal is not a branch.
+     *
+     * The second is the point of this whole rewrite: WHAT THIS SAYS DEPENDS ON WHICH
+     * SEARCHES HAVE ACTUALLY RUN. It must never describe one that has not.
+     */
+    const searchDetail = (): string[] => {
+      const out: string[] = [];
+      if (state.recovered) {
+        out.push(
+          `Source B’s key was rebuilt from the PIN ${state.recovered.seed}, out of ` +
+            `${PIN_SPACE.toLocaleString('en-GB')} four-digit PINs.`
+        );
+      }
+      if (state.realSearch && !state.realSearch.found) {
+        out.push(
+          `The same search ran against Source A — the same ` +
+            `${state.realSearch.tried.toLocaleString('en-GB')} candidates, the same work — ` +
+            'and nothing opened it.'
+        );
+      } else if (state.realSearch?.found) {
+        out.push(
+          'A candidate PIN opened Source A, which should be impossible. Something in this ' +
+            'build is wrong; see Step 3.'
+        );
+      } else {
+        out.push(
+          'Source A has NOT been searched yet, so nothing on this page has established ' +
+            'anything about it. Run the same search against it in Step 3 to finish the ' +
+            'comparison.'
+        );
+      }
+      out.push(
+        bothPass
+          ? 'Both columns passed all four checks before any of that happened, and they ' +
+            'still do. Nothing about the bytes changed; the only thing that changed is ' +
+            'that you now know. The marks on this panel were put there by Step 3, not by ' +
+            'the checks.'
+          : 'The checks said what they said before any of that happened, and they still ' +
+            'do. The marks on this panel were put there by Step 3, not by the checks.'
+      );
+      return out;
+    };
 
+    /*
+     * The ALARM belongs to Source B being recovered, and to nothing else.
+     *
+     * Searching Source A and finding nothing is not an alarm — it is the calm half of
+     * the comparison — so a reader who runs Step 3 in the other order sees Source A's
+     * real result on a panel that is still neutral, because nothing alarming has been
+     * shown yet. The tone tracks what was demonstrated, not how many buttons were
+     * pressed.
+     */
     render(
       'look-random',
-      resolved
+      state.recovered !== null
         ? {
             marker: 'look-random',
             tone: 'alarm',
             glyph: 'warn',
             headline: 'ONE OF THESE WAS GUESSABLE',
-            detail: resolvedDetail(),
+            detail: searchDetail(),
           }
-        : {
+        : state.realSearch !== null
+          ? {
+              marker: 'look-random',
+              tone: 'neutral',
+              glyph: 'question',
+              headline: 'SOURCE A HELD — AND THAT SETTLES NOTHING',
+              detail: [
+                `${state.realSearch.tried.toLocaleString('en-GB')} candidate PINs were ` +
+                  'tried against Source A and none of them opened it. That is one source ' +
+                  'ruled out, and it says nothing whatever about the other.',
+                'Source B has not been searched yet. Until it has, this panel is still ' +
+                  'exactly what it was: two keys you cannot tell apart by looking.',
+              ],
+            }
+          : {
             marker: 'look-random',
             tone: 'neutral',
             glyph: 'question',
@@ -310,16 +413,20 @@ export function mountPanel2(): void {
       guessOut,
       el('span', { class: 'pill-head' }, [
         right ? tick() : question(),
-        el('span', {}, [right ? 'Right — and that is not the point' : 'Wrong']),
+        el('span', {}, [
+          right ? 'You read the label, not the bytes' : 'Wrong — and the label said so',
+        ]),
       ]),
       el('span', { class: 'pill-why' }, [
         right
-          ? 'Source B is the seeded one. You had a one-in-two chance, and nothing in the ' +
-            'bytes helped you: the labels did. Cover them up and you are flipping a coin ' +
-            '— which is what everybody inspecting a key is doing.'
-          : 'Source B is the seeded one. Worth noticing how little that costs you here: the ' +
-            'two columns pass the same checks, so there was nothing to get right from the ' +
-            'bytes. The labels were the only clue, and real keys arrive without labels.',
+          ? 'Source B is the seeded one, and the heading above it says so: this was not a ' +
+            'blind test. That is the question worth sitting with — could the BYTES alone ' +
+            'have told you? Cover the two headings and nothing in either column separates ' +
+            'them. Real keys arrive without headings.'
+          : 'Source B is the seeded one, and its heading says so — so this was not even a ' +
+            'guess from the bytes. Worth noticing how little getting it wrong costs you: ' +
+            'the two columns pass the same checks, so there was never anything in them to ' +
+            'read. Real keys arrive without headings.',
       ])
     );
   }

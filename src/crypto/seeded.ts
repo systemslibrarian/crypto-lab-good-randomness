@@ -15,12 +15,24 @@
  * number, and the page says this in those words, because "but I hashed it" is the
  * most common objection a reader arrives with.
  *
- * THE NONCE IS ZERO, DELIBERATELY. ChaCha20 takes a nonce, and a real stream
- * cipher deployment varies it per message. Here it is fixed at zero so that one
- * seed means one keystream, which is what makes the whole generator reproducible
- * and the recovery possible. A nonce chosen from a real random source would fix
- * this particular hole and leave the lesson intact — the key would still be ten
- * thousand guesses wide — so the page does not offer that as a remedy.
+ * THE NONCE IS ZERO, DELIBERATELY. ChaCha20 takes a nonce, and a real stream cipher
+ * deployment varies it per message. Here it is fixed at zero so that one seed means
+ * one keystream, which is what makes the generator reproducible and the recovery
+ * possible.
+ *
+ * AND VARYING IT WOULD NOT BE THE FIX, which is worth stating because it is the
+ * obvious next thought. A nonce is not a secret: it travels with the ciphertext and
+ * the recipient must have it, so an attacker has it too and simply includes it in
+ * every candidate. Ten thousand seeds with a known nonce is still ten thousand
+ * tries. The only way a varying nonce helps is if it is itself drawn from a source
+ * the attacker cannot enumerate — at which point the real source is doing the work
+ * and the seed was never the thing holding the system up. That is why the page
+ * names the starting point as the fix and never the nonce.
+ *
+ * DO NOT CONFUSE IT WITH THE OTHER NONCE ON THIS PAGE. This one is ChaCha20's, it is
+ * zero, and it is internal to the generator. The one Step 3 displays as "the nonce,
+ * which is not a secret" belongs to AES-GCM, is freshly drawn per message from the
+ * real source, and ships with the ciphertext as every AEAD nonce does.
  */
 import { keystream, NONCE_BYTES } from './chacha20';
 import { KEY_BYTES } from './real';

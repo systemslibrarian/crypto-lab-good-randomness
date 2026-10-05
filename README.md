@@ -96,15 +96,24 @@ Three more things the lab is explicit about in-page:
    PIN of 0000 would otherwise be found on try 1 and the headline would undersell the point by
    four orders of magnitude.
 7. **Step 3b — The same search against the real key.** Identical code, identical ten thousand
-   candidates, identical work — and nothing found, because there is no seed to guess. The page
-   also checks that the message still opens under the key that sealed it, so the failure is
-   demonstrably the search's and not the cipher's.
-8. **The repaint.** The moment a recovery succeeds, Step 2 re-renders in colour and marks its two
-   columns. The thing you could not read becomes readable only after something else told you the
-   answer. That is the page's central mechanism, and it cannot be undone without a reload.
-9. **The recap.** Four observations about a generator, each with what it establishes and what it
-   does not, plus three applied questions.
-10. **The pinned cases.** Ten known-answer checks run in your browser on arrival — see Build &
+   candidates, identical work — and nothing found, because Source A did not come from that small
+   list of starting points. The page also checks that the message still opens under the key that
+   sealed it, so the failure is demonstrably the search's and not the cipher's, and it says
+   plainly that *this* attack found nothing rather than that none could.
+8. **The repair, as a comparison.** Finishing both halves draws a five-row table: same cipher,
+   same key length, same four checks passed — and one row that differs, which is where the key
+   started. Keep the encryption, change the starting point. It is not drawn until both
+   experiments have actually run.
+9. **The repaint.** The moment a recovery succeeds, Step 2 re-renders and marks the column it
+   recovered. The thing you could not read becomes readable only after something else told you
+   the answer. That is the page's central mechanism, and it cannot be undone without a reload.
+   **Each column reports only its own experiment**: the one that has not been searched says
+   `Not searched yet`, in words and a hueless mark, and the panel is truthful in whichever order
+   the two searches are run.
+10. **The recap.** Four observations about a generator, each with what it establishes and what it
+    does not, plus four applied questions — the last of which exists to say that determinism is
+    not the defect.
+11. **The pinned cases.** Ten known-answer checks run in your browser on arrival — see Build &
     Verify.
 
 ## When to Use It
@@ -148,6 +157,14 @@ watch it find nothing. Everything runs in your browser; nothing is sent anywhere
   running while the keys are remade — a basis captured *after* the inputs moved is
   indistinguishable from one that never moved — so Step 2's button is held inert for the
   duration rather than the comparison being made cleverer.
+- **A result reported for an experiment that never ran.** This page shipped with exactly that,
+  and it is worth recording rather than quietly fixing. Recovering Source B set one flag, Step 2
+  read that flag for *both* columns, and Source A was immediately stamped "ten thousand guesses
+  found nothing here" with no Source A search having happened. A claims test even required that
+  label — a test pinning the bug, which is the failure §4.1b names. Each column now carries its
+  own result, a column with no result says `Not searched yet`, and `M8` restores the defect to
+  keep the fix honest. In a lab whose whole argument is that a check which has not looked must
+  not read like a check that looked and found nothing, it was the worst defect available.
 - **Two machines with the same starting state.** Out of scope here and the subject of **Entropy
   Collapse**; this lab is the one that establishes why it matters.
 
@@ -179,8 +196,8 @@ suites against the production build.
 
 ## Build & Verify
 
-**68 unit tests** (8 files) + **32 claims tests** + **3 accessibility drives** + **10 pinned
-vectors re-derived by an independent implementation on every build** + **7 mutations, all
+**68 unit tests** (8 files) + **41 claims tests** + **3 accessibility drives** + **10 pinned
+vectors re-derived by an independent implementation on every build** + **10 mutations, all
 killed**.
 
 **Correctness, in three independent layers.**
@@ -215,7 +232,7 @@ counter followed by the nonce) where the RFC states a separate counter word, so 
 §2.3.2 case and exits with a distinct code if its own packing is wrong, rather than reporting ten
 transcription errors.
 
-**The claims suite** (`e2e/claims.spec.ts`, 32 tests) checks what the page *says*. The strongest
+**The claims suite** (`e2e/claims.spec.ts`, 41 tests) checks what the page *says*. The strongest
 is an independent re-derivation: with the PIN, the nonce and the ciphertext all on screen, the
 test rebuilds the key with **OpenSSL's ChaCha20** and opens the message with **OpenSSL's
 AES-256-GCM**, through `node:crypto`. A build whose hand-rolled cipher was wrong in a
@@ -254,11 +271,13 @@ standard requires this step:
 
 | Oracle | Degradation | Build | CSS hash | Reported |
 |---|---|---|---|---|
-| `nontext.ts` | `--control-border` → `#2b3440` | succeeded | `31b978f9a07b7` → `5e58baf968454` | `textarea#recipe` and `button#check-broken.btn` at 1.37:1, six `button.check-opt` at 1.27:1, against a required 3:1 |
-| `contrast.ts` | `--held-text` → `#4a6c8f` | succeeded | `31b978f9a07b7` → `0d4d8ed5a8066` | `2.65:1 (needs 4.5:1) span.verdict-headline — fg rgb(74, 108, 143) on rgb(32, 42, 54)`, where that backdrop is the composited `color-mix()` result |
+| `nontext.ts` | `--control-border` → `#2b3440` | succeeded | `fa261d50de5e6` → `3bda675adfd69` | `textarea#recipe` and `button#check-broken.btn` at 1.37:1, eight `button.check-opt` at 1.27:1, against a required 3:1 |
+| `contrast.ts` | `--held-text` → `#4a6c8f` | succeeded | `fa261d50de5e6` → `e4461fc5eb8f1` | `2.65:1 (needs 4.5:1) span.verdict-headline — fg rgb(74, 108, 143) on rgb(32, 42, 54)`, where that backdrop is the composited `color-mix()` result |
 
-Both returned to `31b978f9a07b7` on restore, which is the hash `md5 dist/assets/*.css` prints on
-`main` today — so the record is checkable rather than merely recorded.
+Both returned to `fa261d50de5e6` on restore, which is the hash `md5 dist/assets/*.css` prints on
+`main` today — so the record is checkable rather than merely recorded. Both proofs are re-run
+whenever the stylesheet changes; a record pointing at a hash nobody can reproduce would be worse
+than no record.
 
 **The mutation ledger — proof the tests bite.** A green suite is not evidence until you have
 watched it fail. `mutations/mutations.json` records each mutation as a **concrete patch** — a
@@ -280,6 +299,9 @@ was written by the run that produced it, never typed.**
 | the negative-claim text is deleted | `recovered` | KILLED |
 | a check inside the negative-claim fixture is broken | `recovered` | KILLED |
 | the real-key panel searches the seeded ciphertext | `no-seed` | KILLED |
+| Source A borrows Source B's result | `look-random` | KILLED |
+| the comparison is drawn before both halves exist | `no-seed` | KILLED |
+| a rejected guess discloses the wrong key | `guess` | KILLED |
 
 The first four are the ones the build brief names. The next two are what §4.1d requires of any
 negative claim: delete the claim text and the assertion that it is on screen must fail; break a
@@ -312,10 +334,12 @@ subject for a false record. Restored, the suite is green again.
 
 ## Performance
 
-The whole ten-thousand-candidate search — 10,000 SHA-256 digests, 10,000 ChaCha20 blocks and
-10,000 AES-GCM attempts — runs in roughly a quarter of a second in a headless browser. The page
-prints the measured figure rather than this one, because the number that teaches is the one on the
-reader's own machine.
+The whole ten-thousand-candidate search is 10,000 SHA-256 digests, 10,000 ChaCha20 blocks and
+10,000 AES-GCM attempts. **The page prints the figure it measured, on the machine it ran on, and
+that is the only number to trust** — the spread is wide. Headless Chromium on the development
+machine reports around a quarter of a second; a reviewer running it elsewhere measured 13.2
+seconds for the same sweep. Both are honest, neither is a promise, and the lesson survives either
+way — arguably landing harder at thirteen seconds, because that is still the whole space.
 
 ## Pending central assignment
 

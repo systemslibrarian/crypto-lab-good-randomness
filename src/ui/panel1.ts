@@ -219,6 +219,11 @@ export function mountPanel1(): void {
               'That is the whole difference, and it is not a flaw in the cipher. A program ' +
                 'given the same input takes the same steps. The dice above were never ' +
                 'random; they were worked out.',
+              'Repeating is not the fault, though, and this is the easiest thing to get ' +
+                'wrong here. The random source behind the first roll is a program too, and it ' +
+                'would repeat as well if you could put it back in the same state. What ' +
+                'separates them is whether anybody else can find the starting point \u2014 ' +
+                'and a word you typed is a much shorter list than the one a computer keeps.',
             ],
           }
         : {

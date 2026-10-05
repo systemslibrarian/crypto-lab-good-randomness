@@ -29,13 +29,13 @@
  */
 import { searchPins, trySeed } from '../crypto/recover';
 import { unseal } from '../crypto/cipher';
-import { PIN_SPACE } from '../crypto/seeded';
+import { PIN_DIGITS, PIN_SPACE, seededKey } from '../crypto/seeded';
 import { toGroupedHex } from '../crypto/bytes';
-import { CANDIDATE_PINS, basis, state } from './state';
+import { CANDIDATE_PINS, basis, keysBasis, state } from './state';
 import { byId, disclosure, el, fill, longValue } from './dom';
 import { refreshPanel2 } from './panel2';
 import { render, slot } from './verdict';
-import { settled } from './settle';
+import { alsoOnSettle, settled } from './settle';
 
 /**
  * The negative claim (§4.1d) — the belief a beginner most likely leaves with wrongly.
@@ -196,18 +196,44 @@ export function mountPanel3(): void {
         refreshPanel2();
         return;
       }
-      render('guess', {
-        marker: 'guess',
-        tone: 'neutral',
-        glyph: 'question',
-        headline: 'WRONG GUESS',
-        detail: [
-          `${guess} was not it. That establishes nothing at all — not that the key is ` +
-            'sound, not that the generator is safe. You have ruled out one number.',
-          `Try another, or stop guessing: the button below rules out all ` +
-            `${fmt(PIN_SPACE)} of them.`,
-        ],
-      });
+      /*
+       * A MISS SHOWS ITS WORK, which is the whole reason this panel is worth having.
+       *
+       * The common outcome of a single guess is a miss, and a miss used to be four
+       * lines of prose — so the one state a reader almost always meets was the one
+       * state that showed them nothing. Printing the key the wrong PIN produced makes
+       * the mechanism visible at exactly the moment it is cheapest to follow: a full
+       * 32-byte key was really built from those four digits, it is as random-looking
+       * as the one in Step 2, and the message simply refused it.
+       */
+      const missKey = await seededKey(guess);
+      render(
+        'guess',
+        {
+          marker: 'guess',
+          tone: 'neutral',
+          glyph: 'question',
+          headline: 'REJECTED',
+          detail: [
+            `${guess} was not it. All four steps really ran: the key below was built from ` +
+              'those four digits, handed to the encrypted message, and the message refused ' +
+              'it. Nothing compared it with the real key — there was no need, because a ' +
+              'wrong key fails the message\u2019s own integrity check.',
+            'That establishes nothing at all: not that the key is sound, not that the ' +
+              `generator is safe. You have ruled out one number out of ${fmt(PIN_SPACE)}.`,
+          ],
+        },
+        [
+          disclosure('Show the key this wrong PIN produced', [
+            longValue(toGroupedHex(missKey), `The 32 bytes behind the PIN ${guess}`),
+            el('p', { class: 'bytes-lede' }, [
+              'Compare it with Source B in Step 2. It is just as random-looking, and it is ' +
+                'the wrong key \u2014 which is the point. Looking right has never been the ' +
+                'test; opening the message is.',
+            ]),
+          ]),
+        ]
+      );
     });
   });
 
@@ -255,13 +281,15 @@ export function mountPanel3(): void {
               `stopped at try ${fmt(found.onTry)}.`,
             'Nothing was broken to do this. The cipher is correct, the key is a full 256 ' +
               'bits, and every check in Step 2 passed. The key was rebuilt by counting.',
-            // The brief's own framing, and it is literally true of the sweep that just
-            // ran: one key was derived per candidate, and the candidates are the whole
-            // seed space. A reader who has followed this far should be told that the
-            // page did not find A key, it enumerated ALL of them.
+            // SCOPED TO WHAT THE SWEEP ACTUALLY ENUMERATED. This said "every seed this
+            // generator can be given" and "every key it will ever produce", and neither
+            // is true: `seededBytes` accepts any string at all -- Step 1's recipe box
+            // proves it -- and a generator run on past its first 32 bytes keeps going.
+            // What the sweep really did is still the point, and it is still striking.
             `And it is worse than one key. Those ${fmt(outcome.tried)} candidates are not a ` +
-              'sample — they are every seed this generator can be given, so the search ' +
-              'just worked out every "random" key it will ever produce. There are no others.',
+              'sample: they are every four-digit PIN there is, so the search did not find ' +
+              'one key — it worked out the key for every PIN a program could have started ' +
+              'from, and then noticed which one was yours.',
           ],
         },
         [
@@ -299,7 +327,73 @@ export function mountPanel3(): void {
       // is equally consistent with a ciphertext this build cannot open at all.
       const stillOpens = (await unseal(keys.real.bytes, sealed)) === state.secret;
 
+      // Recorded BEFORE anything is rendered, so Step 2's repaint describes a search
+      // that actually ran. Step 2 reads this field and nothing else about Source A.
+      state.realSearch = { tried: outcome.tried, found: outcome.found };
       const asExpected = outcome.found === null && stillOpens;
+      /*
+       * THE COMPARISON IS THE REPAIR, and it is drawn rather than described.
+       *
+       * This panel already WAS the fix — same cipher, same key length, different
+       * starting point — but it read as a second experiment rather than as the answer
+       * to the first, so a reader could finish the lab having seen the failure and not
+       * the remedy. Four rows is all it takes: three things that did not change, and
+       * the one that did.
+       *
+       * Only rendered when the reader has both halves. A comparison table against an
+       * experiment that has not run would be the same defect this session started by
+       * fixing.
+       */
+      const comparison = (): HTMLElement[] =>
+        state.recovered === null
+          ? []
+          : [
+              el('div', { class: 'table-wrap', role: 'region', tabindex: 0,
+                          'aria-label': 'What changed between the two sources' }, [
+                el('table', { class: 'recap-table' }, [
+                  el('caption', { class: 'sr-only' }, [
+                    'What differs between Source B and Source A',
+                  ]),
+                  el('thead', {}, [
+                    el('tr', {}, [
+                      el('th', { scope: 'col' }, ['What changed?']),
+                      el('th', { scope: 'col' }, ['Source B']),
+                      el('th', { scope: 'col' }, ['Source A']),
+                    ]),
+                  ]),
+                  el('tbody', {}, [
+                    ...(
+                      [
+                        ['Encryption', 'AES-256-GCM', 'AES-256-GCM'],
+                        ['Key length', '32 bytes', '32 bytes'],
+                        ['Step 2 checks', 'All four passed', 'All four passed'],
+                        [
+                          'Where the key started',
+                          `A ${PIN_DIGITS}-digit PIN`,
+                          'The operating system',
+                        ],
+                        [
+                          'This PIN attack',
+                          `Opened on try ${fmt(state.recovered.onTry)}`,
+                          `${fmt(outcome.tried)} tried, none opened it`,
+                        ],
+                      ] as const
+                    ).map(([what, b, a]) =>
+                      el('tr', {}, [
+                        el('th', { scope: 'row' }, [what]),
+                        el('td', {}, [b]),
+                        el('td', {}, [a]),
+                      ])
+                    ),
+                  ]),
+                ]),
+              ]),
+              el('p', { class: 'claim-note' }, [
+                'One row differs, and it is not the cipher, the key length or anything a ' +
+                  'check could see. That is the whole lab: keep the encryption, change where ' +
+                  'the key starts.',
+              ]),
+            ];
       render(
         'no-seed',
         asExpected
@@ -311,12 +405,17 @@ export function mountPanel3(): void {
               detail: [
                 `The same search, the same ${fmt(outcome.tried)} candidates, the same ` +
                   `${duration(outcome.elapsedMs)} of work — against Source A. Nothing ` +
-                  'opened it, because there is no seed to guess: those 32 bytes came from ' +
-                  'the operating system and were never worked out from anything.',
+                  'opened it, because Source A did not come from this small list of starting ' +
+                  'points. Its bytes came from the operating system\u2019s own generator.',
+                'That generator is a program too, and it is just as deterministic as the one ' +
+                  'in Step 1 — the difference is where it starts. Its starting point is kept ' +
+                  'secret and is fed by physical events the machine measured, so there is no ' +
+                  'short list of candidates to count through.',
                 'The message is still perfectly readable with the key that made it, which ' +
                   'the page has just checked — so this is the search failing, not the ' +
-                  'cipher. To guess this key you would need to count to a number with 78 ' +
-                  'digits in it, and ten thousand is where you have got to.',
+                  'cipher. And be precise about what that means: THIS attack found nothing. ' +
+                  'It is not a proof that no attack ever could, and no experiment on one ' +
+                  'page could be.',
               ],
             }
           : {
@@ -335,8 +434,12 @@ export function mountPanel3(): void {
                     'so this search proved nothing — there was nothing openable to find. ' +
                     'Something in this build is wrong.',
               ],
-            }
+            },
+        asExpected ? comparison() : []
       );
+      // Step 2 is repainted by EITHER search, so the comparison is truthful in
+      // whichever order the reader runs them.
+      refreshPanel2();
     });
   });
 
@@ -354,9 +457,43 @@ export function mountPanel3(): void {
             'was told what it was.',
         ]),
       ]),
-      interceptedBytes(),
     ]);
   }
+
+  /**
+   * What a stranger was handed, rendered BEFORE the attack rather than after it.
+   *
+   * It used to appear only once the recovery had succeeded, which is the wrong way
+   * round: a reader cannot judge whether an attack is impressive or trivial until
+   * they know what it was given. Shown first, the sweep reads as ten thousand
+   * ordinary attempts on a published ciphertext; shown afterwards it reads as the
+   * page producing a key from nowhere.
+   *
+   * REBUILT ONLY WHEN THE KEYS CHANGE. `settled()` calls this after every action, and
+   * an unconditional rebuild would snap the disclosure shut under a reader who had
+   * just opened it and then pressed anything at all.
+   */
+  let interceptedFor: string | null = null;
+  function renderIntercepted(): void {
+    const host = byId('p3-intercepted');
+    const now = state.keys ? keysBasis() : null;
+    if (now === interceptedFor) return;
+    interceptedFor = now;
+    if (!now) {
+      fill(host);
+      return;
+    }
+    fill(
+      host,
+      el('p', { class: 'sub-lede' }, [
+        'That is everything the attack below is given: no key, no PIN, no message. Open this ' +
+          'before you run it, so you can see it is working from the same bytes a stranger ' +
+          'would have intercepted.',
+      ]),
+      interceptedBytes()
+    );
+  }
+  alsoOnSettle(renderIntercepted);
 
   /**
    * What a stranger would have intercepted: the nonce and the encrypted bytes.
@@ -375,7 +512,7 @@ export function mountPanel3(): void {
   function interceptedBytes(): HTMLElement {
     const sealed = state.sealedSeeded;
     if (!sealed) return el('span');
-    return disclosure('Show the encrypted bytes a stranger would have had', [
+    return disclosure('Show the encrypted bytes a stranger was handed', [
       longValue(toGroupedHex(sealed.iv), 'The nonce, which is not a secret'),
       longValue(toGroupedHex(sealed.bytes), 'The encrypted message, with its tag'),
       el('p', { class: 'bytes-lede' }, [

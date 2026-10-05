@@ -613,6 +613,13 @@ textarea {
 .key-col-mark-untouched {
   color: var(--ok-text);
 }
+/* NOT SEARCHED YET. Deliberately hueless and in the body ink rather than a tone:
+   "no result" must not read as a good result, which is precisely the mistake this
+   column used to make when it borrowed its neighbour's outcome. The column keeps
+   --control-border for the same reason. */
+.key-col-mark-pending {
+  color: var(--text);
+}
 .key-col-key {
   margin: 0.6rem 0 0;
 }

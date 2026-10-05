@@ -370,6 +370,8 @@ export async function boot(page: Page, theme: 'dark'): Promise<void> {
     await expect(page.locator(`#${id}`)).toBeEnabled();
   }
 
+  // Nothing has been handed to the attacker yet, because there is no ciphertext.
+  await expect(page.locator('#p3-intercepted')).toBeEmpty();
   // The progress bar does not exist until a search runs, and the next-step links
   // appear only once a step has produced something.
   await expect(page.locator('#p3-progress')).toBeHidden();
@@ -411,9 +413,9 @@ export async function boot(page: Page, theme: 'dark'): Promise<void> {
   // The per-question shape is asserted rather than one magic total: a total is the
   // kind of number that is wrong on the first write and tells you nothing about
   // WHICH question lost its options.
-  await expect(page.locator('#recap .scenario')).toHaveCount(3);
-  await expect(page.locator('#recap .check-result')).toHaveCount(3);
-  for (const n of [1, 2, 3]) {
+  await expect(page.locator('#recap .scenario')).toHaveCount(4);
+  await expect(page.locator('#recap .check-result')).toHaveCount(4);
+  for (const n of [1, 2, 3, 4]) {
     const options = page.locator(`#scenario-${n} .check-opt`);
     expect(
       await options.count(),
@@ -976,9 +978,11 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await expect(page.locator('#predict-checks .check-result')).toHaveClass(/pill-bad/);
   await scanAt('Step 2: its prediction answered wrong');
 
-  // ── Step 3: the single guess, then the two searches ─────────────────────
+  // ── Step 3: what the attacker was handed, before it runs ────────────────
   await expect(page.locator('#try-guess')).toBeEnabled();
   await expect(page.locator('#panel-3 .gate-note')).toBeHidden();
+  await reveal(page, /Show the encrypted bytes a stranger was handed/);
+  await scanAt('Step 3: the intercepted nonce and ciphertext, disclosed before the attack');
   await reveal(page, /Predict first/, 2);
   await page.locator('#predict-search .check-opt').first().click();
   await expect(page.locator('#predict-search .check-result')).toHaveClass(/pill-ok/);
@@ -1012,7 +1016,11 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
     const tone = await guessVerdict.getAttribute('data-tone');
     if (tone === 'neutral' && !sawMiss) {
       sawMiss = true;
-      await scanAt(`Step 3: the guess ${pin} missed — neutral, because a miss establishes nothing`);
+      // The rejected guess now DISCLOSES the key it built, which is a new paint and
+      // the state a reader almost always meets.
+      await reveal(page, /Show the key this wrong PIN produced/);
+      await expect(page.locator(`[data-label="The 32 bytes behind the PIN ${pin}"]`)).toBeVisible();
+      await scanAt(`Step 3: the guess ${pin} rejected — the key it really built, disclosed`);
     } else if (tone === 'alarm' && !hitPin) {
       hitPin = pin;
       await expect(page.locator('#p3-guess-out .recovered-text')).toBeVisible();
@@ -1028,10 +1036,17 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await page.locator(`#pin-${hitPin}`).check();
   await press(page, 'Try this guess', 'guess', 'alarm');
 
-  // The hit also repaints Step 2, so the marked columns are scanned here.
+  // The hit repaints Step 2 — but only Source B has a result, so Source A reads NOT
+  // SEARCHED YET in its own hueless mark. That rendering exists because the panel used
+  // to stamp Source A "ten thousand guesses found nothing here" on the strength of
+  // Source B's recovery, with no Source A search having run, and it is reachable only
+  // in this window between the two searches.
   await expect(page.locator('.key-col-mark')).toHaveCount(2);
+  await expect(page.locator('.key-col[data-col="real"] .key-col-mark')).toHaveText(
+    'Not searched yet'
+  );
   await expect(page.locator('[data-verdict="look-random"]')).toHaveAttribute('data-tone', 'alarm');
-  await scanAt('Step 2 repainted by Step 3 — both columns marked, the panel in alarm');
+  await scanAt('Step 2 half-repainted — Source B recovered, Source A NOT SEARCHED YET');
 
   await reveal(page, /Show the key that was rebuilt/);
   await scanAt('Step 3: the rebuilt key disclosed beside the message it opened');
@@ -1040,11 +1055,21 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await press(page, /Try all/, 'recovered', 'alarm');
   await expect(page.locator('[role="progressbar"]')).toHaveAttribute('aria-valuenow', '10000');
   await expect(page.locator('.negative-claim')).toBeVisible();
-  await expect(page.locator('#p3-next .next-step-link')).toBeVisible();
+  // NOT YET. The finish link waits for both halves of Step 3, so it is absent here and
+  // appears after the Source A search below.
+  await expect(page.locator('#p3-next .next-step-link')).toHaveCount(0);
   await scanAt('Step 3: PASSED EVERY CHECK — AND FULLY RECOVERED, the negative-claim fixture');
 
   await press(page, 'Run the same search against Source A', 'no-seed', 'held');
-  await scanAt('Step 3: NOTHING TO FIND — the same search, the same work, a calm refusal');
+  await expect(page.locator('#p3-noseed-out .recap-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.key-col[data-col="real"] .key-col-mark')).toContainText(
+    'found nothing here'
+  );
+  await expect(page.locator('#p3-next .next-step-link')).toBeVisible();
+  await scanAt('Step 3: NOTHING TO FIND — the calm refusal and the what-changed comparison');
+
+  await page.locator('#p3-noseed-out .table-wrap').focus();
+  await scanAt('the what-changed comparison focused as a scroll region');
 
   // ── The recap and the closing questions ─────────────────────────────────
   await page.locator('#scenario-1 .check-opt').last().click();
@@ -1055,11 +1080,20 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await expect(page.locator('#scenario-1 .check-result')).toHaveClass(/pill-ok/);
   await scanAt('the recap table, with a closing question answered right');
 
+  // The fourth question is the one aimed at the wrong takeaway, and it is the last
+  // thing on the page, so it is scanned where a reader meets it.
+  await page.locator('#scenario-4 .check-opt').first().click();
+  await expect(page.locator('#scenario-4 .check-result')).toHaveClass(/pill-ok/);
+  await scanAt('the determinism question answered — the last thing on the page');
+
   // The recap table is the one shape on this page allowed to scroll sideways, so it
   // is scanned focused — that is where its keyboard route and label are judged
   // (WCAG 2.1.1).
-  await page.locator('.table-wrap').focus();
-  await expect(page.locator('.table-wrap')).toBeFocused();
+  // SCOPED. There are two scrollable tables on this page now -- the recap's and Step
+  // 3's what-changed comparison -- so a bare `.table-wrap` is ambiguous and Playwright
+  // says so rather than silently focusing the first.
+  await page.locator('#recap .table-wrap').focus();
+  await expect(page.locator('#recap .table-wrap')).toBeFocused();
   await scanAt('the recap table focused as a scroll region');
 
   // ── The pinned case list, which ships shut ──────────────────────────────

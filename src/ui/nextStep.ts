@@ -40,7 +40,14 @@ const HOPS: readonly Hop[] = [
   },
   {
     host: 'p3-next',
-    ready: () => state.recovered !== null,
+    // BOTH halves, not just the recovery. Step 3's lesson is a COMPARISON: one key
+    // rebuilt by counting, and the same search against the other finding nothing.
+    // This used to offer the recap as soon as anything had been recovered, which a
+    // one-in-four lucky guess satisfies — so a reader could be sent to the summary
+    // having seen neither the ten-thousand count nor the half that makes it mean
+    // something. Nothing is blocked by this; the reader can scroll wherever they
+    // like. It is only the page declining to say "finished" before it is.
+    ready: () => state.recovered !== null && state.realSearch !== null,
     href: '#recap',
     label: 'Finish — what this does and does not tell you',
   },

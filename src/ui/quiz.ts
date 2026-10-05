@@ -151,8 +151,10 @@ const QUESTIONS: readonly Question[] = [
         label: 'That the generator is safe to use for keys',
         correct: false,
         because:
-          'No. The seeded generator on this page would pass any battery you ran at it, and its ' +
-          'key took ten thousand tries. Tests of output cannot see where the output started.',
+          'No. The seeded generator on this page passed every appearance check in Step 2, and ' +
+          'its key took ten thousand tries. Tests that examine the output cannot see where the ' +
+          'output started \u2014 the test that WOULD have caught it is the one Step 3 runs, ' +
+          'which ignores the output and tries the starting points instead.',
       },
     ],
   },
@@ -166,19 +168,59 @@ const QUESTIONS: readonly Question[] = [
         label: 'No — hashing ten thousand inputs gives ten thousand outputs',
         correct: true,
         because:
-          'Right, and this page already does exactly that: Source B’s key IS the SHA-256 of ' +
-          'a PIN. A hash spreads a value out, it does not create choices that were never there. ' +
-          'The only fix is more starting points — from a source the attacker cannot ' +
-          'enumerate.',
+          'Right, and this page already does exactly that: the PIN is hashed with SHA-256, and ' +
+          'ChaCha20 turns that hash into Source B\u2019s key. Two respectable steps, and still ' +
+          'only ten thousand possible answers \u2014 a hash spreads a value out, it does not ' +
+          'create choices that were never there. The only fix is more starting points, from a ' +
+          'source the attacker cannot enumerate.',
       },
       {
         label: 'Yes — SHA-256 output is unpredictable',
         correct: false,
         because:
           'Not here. SHA-256 is unpredictable only if you do not know the input. The attacker ' +
-          'in Step 3 knew the shape of the input and tried all of them — through the hash, ' +
-          'which cost nothing. A slower hash would have made ten thousand tries take longer and ' +
-          'would not have reduced them to fewer than ten thousand.',
+          'in Step 3 knew the shape of the input and tried all of them \u2014 through the hash, ' +
+          'which cost nothing. A deliberately slow password hash would be a real improvement ' +
+          'in cost: ten thousand tries could be made to take days instead of a moment. It ' +
+          'still would not make them fewer than ten thousand, which is why it is a brake and ' +
+          'not a fix.',
+      },
+    ],
+  },
+  {
+    /*
+     * THE QUESTION AIMED AT THE WRONG TAKEAWAY.
+     *
+     * The failure mode of a lab like this one is a reader who leaves believing that
+     * deterministic generators are the problem and that the operating system produces
+     * numbers which cannot possibly be guessed. Both halves of that are false, and
+     * both are easy to acquire from Step 1 if nothing says otherwise. This is the one
+     * question whose right answer is "determinism is fine".
+     */
+    host: 'scenario-4',
+    prompt:
+      'A generator is completely deterministic, but its starting point is kept secret and ' +
+      'is far too large to try. Is the determinism the problem?',
+    options: [
+      {
+        label: 'No — the problem was only ever a starting point somebody can try',
+        correct: true,
+        because:
+          'Right, and this is the thing most worth taking away. Every generator on this page ' +
+          'is deterministic, including the browser’s own: give it the same internal state ' +
+          'and it produces the same bytes. That is not the defect. The defect in Step 3 was a ' +
+          'list of ten thousand starting points that a stranger could work through in under a ' +
+          'second.',
+      },
+      {
+        label: 'Yes — anything deterministic can be reproduced, so it cannot be secret',
+        correct: false,
+        because:
+          'Not quite. Reproducible BY WHOM is the question. You could reproduce a key if you ' +
+          'knew the starting point, and so could anybody else who could find it — which ' +
+          'in Step 3 took ten thousand tries, and for a secret, large starting point takes ' +
+          'longer than anyone has. Nearly all real cryptography is deterministic machinery ' +
+          'fed from one unguessable place.',
       },
     ],
   },

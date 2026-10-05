@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T05:02:01.717Z.
+Generated 2026-10-05T12:00:23.489Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 
@@ -16,19 +16,22 @@ Generated 2026-10-05T05:02:01.717Z.
 3. the run served the MUTATED code (bundle hash moved, and the red run is not a build or server failure)
 4. a patch that does not compile is DOES NOT BUILD and is never a kill
 
-Unmutated bundle `f3a6eb928557c9b9`; restored bundle `f3a6eb928557c9b9` (matches).
+Unmutated bundle `a9b9913d0d91ce39`; restored bundle `a9b9913d0d91ce39` (matches).
 
 ## Results
 
 | Mutation | Verdict | Outcome | Bundle moved | Owning test |
 |---|---|---|---|---|
-| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | f3a6eb928557c9b9 → f40266730c9c63e2 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | f3a6eb928557c9b9 → ced8413eabdcb4d4 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | f3a6eb928557c9b9 → d99b9d2ea3d3ff51 | the obviously bad generator is caught, and the page counts what it still passed |
-| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 71fcc8c4d760078e | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 75d8ba86d08a128f | every check passes, and the key is recovered anyway |
-| `M6-fixture-check-broken` | `recovered` | **KILLED** | f3a6eb928557c9b9 → 680f5be1f1b78766 | every check passes, and the key is recovered anyway |
-| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | f3a6eb928557c9b9 → 60608b262a25467e | the same search against the real key finds nothing, and proves it did the work |
+| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 6548cb6b03c7a4d7 | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 77af35c97d33725d | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | a9b9913d0d91ce39 → e65c0eb5096689b8 | the obviously bad generator is caught, and the page counts what it still passed |
+| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 6e541ccf648aa5fe | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 69108469993ffe9c | every check passes, and the key is recovered anyway |
+| `M6-fixture-check-broken` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 75b2f5b02b3f9e29 | every check passes, and the key is recovered anyway |
+| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | a9b9913d0d91ce39 → 494e252e0ef3b6b3 | the same search against the real key finds nothing, and proves it did the work |
+| `M8-source-a-borrows-source-b-result` | `look-random` | **KILLED** | a9b9913d0d91ce39 → 04f5cffd7b5a729e | Source A is never reported as searched until it has been |
+| `M9-comparison-drawn-before-both-halves-exist` | `no-seed` | **KILLED** | a9b9913d0d91ce39 → 8b453b1e7877ae0c | the comparison is not drawn before both halves exist |
+| `M10-rejected-guess-discloses-the-wrong-key` | `guess` | **KILLED** | a9b9913d0d91ce39 → 93765535c7d68085 | a rejected guess shows the key it really built |
 
 ## Each mutation in full
 
@@ -46,7 +49,7 @@ PINNED TO SEED 0001, which is deliberate and is the difference between a determi
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → f40266730c9c63e2.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 6548cb6b03c7a4d7.
 
 ```
 Error: Unsupported state or unable to authenticate data
@@ -72,7 +75,7 @@ The page's own did-not-find branch exists for a build that is broken, and it say
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → ced8413eabdcb4d4.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 77af35c97d33725d.
 
 ```
 Error: the recovery must name the PIN it found
@@ -96,7 +99,7 @@ The row still prints its real measurement, which is what makes this a good mutat
 
 **Owning test.** `the obviously bad generator is caught, and the page counts what it still passed` — asserts the `visible-pattern` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → d99b9d2ea3d3ff51.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → e65c0eb5096689b8.
 
 ```
 Error: expect(locator).toHaveClass(expected) failed
@@ -123,7 +126,7 @@ The patch keeps `keystream` and `ZERO_NONCE` used, through a `void`, because `no
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 71fcc8c4d760078e.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 6e541ccf648aa5fe.
 
 ```
 Error: the recovery must name the PIN it found
@@ -145,7 +148,7 @@ Received: undefined
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 75d8ba86d08a128f.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 69108469993ffe9c.
 
 ```
 Error: expect(locator).toContainText(expected) failed
@@ -170,7 +173,7 @@ The bound is moved to 33 rather than narrowed, and that is the deterministic cho
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 680f5be1f1b78766.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 75b2f5b02b3f9e29.
 
 ```
 Error: expect(locator).toHaveCount(expected) failed
@@ -197,7 +200,7 @@ The page catches it honestly rather than rendering it as a result. Its real-key 
 
 **Owning test.** `the same search against the real key finds nothing, and proves it did the work` — asserts the `no-seed` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle f3a6eb928557c9b9 → 60608b262a25467e.
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 494e252e0ef3b6b3.
 
 ```
 Error: expect(locator).toHaveAttribute(expected) failed
@@ -206,5 +209,86 @@ Expected: "held"
 Received: "fail"
 Timeout:  5000ms
 Call log:
+```
+
+### `M8-source-a-borrows-source-b-result`
+
+**What it changes.** Step 2's Source A column takes its mark from Source B's recovery instead of from Source A's own search, as it did before this was fixed.
+
+**Why this one.** THIS IS THE DEFECT THIS MUTATION EXISTS TO KEEP FIXED, restored exactly. A single flag -- 'Source B has been recovered' -- used to drive both columns, so recovering Source B stamped Source A with 'ten thousand guesses found nothing here' when no search against Source A had run, and the comparison announced that the same search against Source A had come back empty. The page reported the outcome of an experiment it had not performed.
+
+In this lab of all labs that is the worst available defect, because the entire argument is that a check which has not looked must not read like a check that looked and found nothing. It is also the defect the claims suite USED TO PIN: a test required Source A to read 'found nothing' after only Source B had been searched, which is the agree-with-the-bug failure §4.1b warns about. That test is now the one that kills this.
+
+Nothing else breaks under it. The recovery still works, the tone is still right, both columns are still marked, and every other assertion in the suite passes -- which is precisely why it shipped.
+
+**What the page then shows.** Source A marked "10,000 guesses found nothing here" with no Source A search having run, and the comparison asserting a result that does not exist.
+
+**Patch sites.** `src/ui/panel2.ts` (1 site, each anchored on text that occurs exactly once).
+
+**Owning test.** `Source A is never reported as searched until it has been` — asserts the `look-random` verdict marker.
+
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 04f5cffd7b5a729e.
+
+```
+Error: expect(locator).toHaveText(expected) failed
+Locator:  locator('.key-col[data-col="real"] .key-col-mark')
+Expected: "Not searched yet"
+Received: "10,000 guesses found nothing here"
+Timeout:  5000ms
+Call log:
+```
+
+### `M9-comparison-drawn-before-both-halves-exist`
+
+**What it changes.** Step 3's what-changed comparison is drawn whenever the Source A search finishes, whether or not Source B has been searched.
+
+**Why this one.** The same family of defect as M8, one panel along. The comparison's whole value is that it sets two completed experiments beside each other; drawn with only one of them done, its 'This PIN attack' row has nothing honest to put in the Source B cell and prints a try number for a search that never ran.
+
+It is worth a mutation of its own because the table is NEW, and a new surface that renders a value for an experiment that has not happened is exactly what this pass was opened to remove. A reviewer adding a row later needs the guard to be load-bearing rather than decorative.
+
+The second patch is what keeps it compiling: with the guard widened, TypeScript can no longer narrow `state.recovered`, so the cell has to tolerate null. A patch that fails to build is DOES NOT BUILD and proves nothing.
+
+**What the page then shows.** A five-row comparison beside a search that only ran against Source A, reporting "Opened on try 0" for an attack nobody performed.
+
+**Patch sites.** `src/ui/panel3.ts`, `src/ui/panel3.ts` (2 sites, each anchored on text that occurs exactly once).
+
+**Owning test.** `the comparison is not drawn before both halves exist` — asserts the `no-seed` verdict marker.
+
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 8b453b1e7877ae0c.
+
+```
+Error: expect(locator).toHaveCount(expected) failed
+Locator:  locator('#p3-noseed-out .recap-table')
+Expected: 0
+Received: 1
+Timeout:  5000ms
+Call log:
+```
+
+### `M10-rejected-guess-discloses-the-wrong-key`
+
+**What it changes.** The key disclosed beside a rejected guess is derived from a fixed PIN rather than from the PIN the reader actually tried.
+
+**Why this one.** The rejected-guess disclosure is the new surface that makes one attempt visible, and its entire claim is 'this is the key those four digits really produce'. A disclosure showing a key from somewhere else would look identical -- 32 bytes of hex nobody can check by eye -- which is the same unfalsifiable-by-inspection problem the whole lab is about.
+
+So the owning test does not read the page against itself: it recomputes the key from the displayed PIN with OpenSSL's SHA-256 and ChaCha20 through node:crypto, and compares. That is the only route that can tell a real derivation from a plausible-looking one.
+
+PINNED TO SEED 0001, outside the four candidates, for the same reason M1 is: deriving from '0000' would coincide with the reader's own guess whenever 0000 is the miss being examined, and the mutation would be recorded as SURVIVED on most runs.
+
+**What the page then shows.** A rejected guess disclosing 32 plausible-looking bytes that are not the key that PIN produces.
+
+**Patch sites.** `src/ui/panel3.ts` (1 site, each anchored on text that occurs exactly once).
+
+**Owning test.** `a rejected guess shows the key it really built` — asserts the `guess` verdict marker.
+
+**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 93765535c7d68085.
+
+```
+Error: expect(received).toBe(expected) // Object.is equality
+Expected: "f85627cc699a1c8e74aea2a54a54b08ee223d4ce283c9c7717032276569c99fe"
+Received: "01f2db2416255e79db67d5ac807e55459ed8754f07586864948aea00f6f81763"
+991 |     // recomputed here with OpenSSL rather than with this lab's own modules.
+992 |     const cipherKey = createHash('sha256').update(missed as string, 'utf8').digest();
+> 993 |     expect(opensslKeystream(cipherKey, 0, Buffer.alloc(12), 32).toString('hex')).toBe(built);
 ```
 

@@ -56,8 +56,24 @@ export interface LabState {
   secret: string;
   /** Which of the four candidate PINs the reader has selected to try. */
   guess: string;
-  /** What the exhaustive search recovered, once it has. */
+  /** What a search against Source B recovered, once one has. */
   recovered: Found | null;
+  /**
+   * What the search against SOURCE A found, once it has run. Null means it has
+   * NOT RUN, which is a different thing from "it found nothing".
+   *
+   * This field exists because the page once conflated the two. Recovering Source
+   * B set one flag, and Step 2 read that flag to label BOTH columns — so the
+   * moment Source B fell, Source A was marked "ten thousand guesses found nothing
+   * here" and the comparison announced that the same search against Source A had
+   * come back empty. No such search had run. The page was reporting the outcome of
+   * an experiment it had not performed, in a lab whose entire subject is checks
+   * that establish less than they appear to.
+   *
+   * So each experiment now carries its own result, and a column with no result
+   * says so rather than borrowing its neighbour's.
+   */
+  realSearch: { tried: number; found: Found | null } | null;
 }
 
 export const state: LabState = {
@@ -71,6 +87,7 @@ export const state: LabState = {
   secret: 'Door code 7714. Rotate it on the first of the month.',
   guess: CANDIDATE_PINS[0],
   recovered: null,
+  realSearch: null,
 };
 
 /** The identity of the current pair of keys, or a marker for "there are none". */
@@ -93,17 +110,21 @@ export const rollsUnderCurrentRecipe = (): number =>
  * pair: press "make two keys" again and the recovery panel retires instead of
  * standing there green, quoting a PIN that belongs to a key no longer on screen.
  *
- * `lookRandom` depends on `recovered` as well as on the keys, which is not a
+ * `lookRandom` depends on BOTH searches as well as on the keys, which is not a
  * dependency at all in the usual sense — nothing about the two outputs changes when
- * the search succeeds. It is there because the recovery is what re-renders Panel 2
- * in colour, and routing that through the same mechanism as everything else means
- * the re-render cannot be forgotten by a later edit.
+ * a search finishes. It is there because the searches are what re-render Panel 2,
+ * and routing that through the same mechanism as everything else means the re-render
+ * cannot be forgotten by a later edit. Naming both is what makes the panel truthful
+ * in EITHER execution order: a reader who searches Source A first sees Source A's
+ * real result and Source B still unmarked, rather than the panel waiting for Source
+ * B before it will say anything.
  */
 export const basis = {
   diceReal: (): string => String(state.realRolls.length),
   diceRecipe: (): string => `${state.recipe}|${state.recipeRolls.length}`,
   sameAgain: (): string => `${state.recipe}|${rollsUnderCurrentRecipe()}`,
-  lookRandom: (): string => `${keysBasis()}|${state.recovered?.seed ?? ''}`,
+  lookRandom: (): string =>
+    `${keysBasis()}|${state.recovered?.seed ?? ''}|${state.realSearch?.tried ?? ''}`,
   visiblePattern: (): string => 'fixed',
   guess: (): string => `${keysBasis()}|${state.guess}`,
   recovered: (): string => keysBasis(),

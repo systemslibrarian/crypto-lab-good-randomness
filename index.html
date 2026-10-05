@@ -190,13 +190,13 @@
       <section class="intro" aria-labelledby="intro-head">
         <h2 id="intro-head">Start here</h2>
         <p class="intro-lead">
-          A key is only a secret because nobody can guess it. Nothing else about it matters —
-          not how long it is, not which algorithm used it. This page builds two keys the same
-          length, runs the same checks over both, and then takes one of them.
+          Two programs make a secret <strong>key</strong> — the value a program uses to lock and
+          unlock a message. Both keys look like nonsense. You are going to find out why a
+          stranger can still read one of the two messages.
         </p>
         <p class="intro-safety">
           Real cryptography, running in your browser. Nothing is sent anywhere and nothing is
-          stored. Use it on example text, not on anything you need to keep.
+          stored.
         </p>
         <details class="intro-more">
           <summary>What is real here, and what this demo is not</summary>
@@ -262,14 +262,13 @@
         <section id="panel-1" class="step" aria-labelledby="p1-head">
           <h2 id="p1-head"><span class="step-n">Step 1</span> Dice, then a computer</h2>
           <p class="step-lede">
-            Start with the one random source everybody already trusts. Then ask what a computer
+            Start with the one random source everybody already trusts, then ask what a computer
             does instead.
           </p>
 
           <h3 class="sub-head">Roll some dice</h3>
           <p class="sub-lede">
-            Five dice. You cannot work out the next five from these, and neither can anybody
-            else.
+            Five dice. You cannot work out the next five from these, and neither can anybody else.
           </p>
           <div class="controls">
             <button id="roll-real" type="button" class="btn btn-primary">Roll five dice</button>
@@ -309,9 +308,10 @@
         <section id="panel-2" class="step" aria-labelledby="p2-head">
           <h2 id="p2-head"><span class="step-n">Step 2</span> Two keys. Tell them apart.</h2>
           <p class="step-lede">
-            Two keys, 32 bytes each. One from the browser's own random source; one from the
-            recipe generator, started at a <span data-pin-digits>4</span>-digit PIN. Then the
-            checks you would think to apply, applied to both.
+            Two keys, 32 bytes each — the same length, so neither has any advantage there. One
+            comes from the browser's own random source; one comes from the Step 1 generator,
+            whose <strong>starting point</strong> is a <span data-pin-digits>4</span>-digit PIN.
+            Then the checks you would think to apply, applied to both.
           </p>
           <details class="learner-check predict">
             <summary>Predict first — optional</summary>
@@ -348,9 +348,17 @@
 
           <h3 class="sub-head">Your guess first</h3>
           <p class="sub-lede">
+            Every attempt, yours or the computer's, is the same four steps:
+            <strong>guess a PIN &rarr; rebuild the key that PIN produces &rarr; try to open the
+            encrypted message &rarr; rejected, or opened.</strong> Nothing is compared against
+            the real key; the message's own integrity check is what says whether a candidate
+            worked.
+          </p>
+          <div id="p3-intercepted"></div>
+          <p class="sub-lede">
             Step 2's generator was started at one of these
             <span data-candidate-count>4</span> PINs, picked without telling you which. Pick
-            one and see.
+            one and watch a single attempt go through those four steps.
           </p>
           <fieldset class="pin-fieldset">
             <legend class="field-label">Which PIN was it?</legend>
@@ -369,8 +377,11 @@
             <div id="predict-search" class="check-body"></div>
           </details>
           <p class="sub-lede">
-            There are <span data-pin-space>10,000</span> four-digit PINs. The page will try every
-            one of them against the encrypted message and count out loud.
+            Guessing from a list of <span data-candidate-count>4</span> was a warm-up: it showed
+            you one attempt, and a real stranger is not handed a four-item list. What they are
+            handed is the <em>shape</em> of the starting point — four digits — and there are
+            <span data-pin-space>10,000</span> of those, counting the ones that begin with a
+            zero. The page will try every one against the encrypted message and count out loud.
           </p>
           <div class="controls">
             <button id="search-seeded" type="button" class="btn btn-primary" data-needs="keys">
@@ -440,7 +451,7 @@
             is the lab that shows it.
           </p>
 
-          <h3 class="sub-head">Three questions</h3>
+          <h3 class="sub-head">Four questions</h3>
           <p class="sub-lede">
             No score, and nothing is recorded. If one of these is awkward, the explanation is
             the point.
@@ -448,6 +459,7 @@
           <div id="scenario-1" class="scenario"></div>
           <div id="scenario-2" class="scenario"></div>
           <div id="scenario-3" class="scenario"></div>
+          <div id="scenario-4" class="scenario"></div>
         </section>
 
         <section id="pinned-section" class="step step-plain" aria-labelledby="pinned-head">

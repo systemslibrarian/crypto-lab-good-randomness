@@ -385,11 +385,88 @@ test.describe('Step 2: two keys, and the panel that must not give the game away'
     // The mark names the SAME PIN the recovery found, which is the cross-check that
     // catches a repaint wired to the wrong value.
     await expect(page.locator('.key-col[data-col="seeded"] .key-col-mark')).toContainText(pin);
-    await expect(page.locator('.key-col[data-col="real"] .key-col-mark')).toContainText(
-      'found nothing'
-    );
-    // And it says the colours came from Step 3, not from the checks.
+    // And it says the marks came from Step 3, not from the checks.
     await expect(verdict).toContainText('put there by Step 3, not by the checks');
+  });
+
+  /*
+   * THE PANEL MAY NOT REPORT A SEARCH THAT DID NOT RUN.
+   *
+   * This is the test that should have existed from the start, and its absence let a
+   * real defect ship: recovering Source B set one flag, Step 2 read that flag for BOTH
+   * columns, and Source A was immediately stamped "ten thousand guesses found nothing
+   * here" with the comparison announcing that the same search against Source A had come
+   * back empty. No such search had run.
+   *
+   * Worse, the test above USED TO ASSERT THAT BEHAVIOUR — it required Source A to read
+   * "found nothing" after only Source B had been searched. A test that pins the bug is
+   * the failure §4.1b warns about in as many words, and it is why this one checks the
+   * two orders separately rather than checking that the page agrees with itself.
+   */
+  test('Source A is never reported as searched until it has been', async ({ page }) => {
+    await boot(page, 'dark');
+    witness(test.info().title, 'look-random');
+    await makeKeys(page);
+    await searchAll(page);
+
+    const aMark = page.locator('.key-col[data-col="real"] .key-col-mark');
+    await expect(aMark).toHaveText('Not searched yet');
+    await expect(aMark).not.toContainText('found nothing');
+    // Asserted against the DOM rather than the prose alone: no Source A verdict exists.
+    await expect(page.locator('[data-verdict="no-seed"]')).toHaveCount(0);
+    const said = await page.locator('[data-verdict="look-random"]').innerText();
+    expect(said).toContain('Source A has NOT been searched yet');
+    expect(said).not.toContain('came back with nothing');
+
+    // Only once it really runs does the mark appear, and it quotes the count that ran.
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+    await expect(aMark).toContainText('10,000 guesses found nothing here');
+  });
+
+  test('the other order is just as truthful: Source A first', async ({ page }) => {
+    await boot(page, 'dark');
+    witness(test.info().title, 'look-random');
+    await makeKeys(page);
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+
+    const verdict = page.locator('[data-verdict="look-random"]');
+    // Source A reports its real result; Source B reports that nothing has been tried.
+    await expect(page.locator('.key-col[data-col="real"] .key-col-mark')).toContainText(
+      'found nothing here'
+    );
+    await expect(page.locator('.key-col[data-col="seeded"] .key-col-mark')).toHaveText(
+      'Not searched yet'
+    );
+    // AND THE TONE IS STILL NEUTRAL. Ruling out Source A demonstrates nothing alarming;
+    // the alarm belongs to Source B being recovered, which has not happened.
+    await expect(verdict).toHaveAttribute('data-tone', 'neutral');
+    await expect(verdict).toContainText('SOURCE A HELD — AND THAT SETTLES NOTHING');
+
+    await searchAll(page);
+    await expect(verdict).toHaveAttribute('data-tone', 'alarm');
+    await expect(page.locator('.key-col[data-col="seeded"] .key-col-mark')).toContainText(
+      await recoveredPin(page)
+    );
+  });
+
+  test('both results are retired together when the keys change', async ({ page }) => {
+    await boot(page, 'dark');
+    await makeKeys(page);
+    await searchAll(page);
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+    await expect(page.locator('.key-col-mark')).toHaveCount(2);
+
+    await makeKeys(page);
+    // A Source A result that survived the regeneration would be the same lie in slower
+    // motion: a mark describing a search against a key that no longer exists.
+    await expect(page.locator('.key-col-mark')).toHaveCount(0);
+    await expect(page.locator('[data-verdict="look-random"]')).toHaveAttribute(
+      'data-tone',
+      'neutral'
+    );
   });
 
   test('the obviously bad generator is caught, and the page counts what it still passed', async ({
@@ -452,13 +529,17 @@ test.describe('Step 2: two keys, and the panel that must not give the game away'
     await page.locator('.check-opt', { hasText: 'Source A is the guessable one' }).click();
     await expect(result).toHaveClass(/pill-bad/);
     await expect(result).toContainText('Source B is the seeded one');
-    await expect(result).toContainText('real keys arrive without labels');
+    await expect(result).toContainText('Real keys arrive without headings');
 
     await page.locator('.check-opt', { hasText: 'Source B is the guessable one' }).click();
     await expect(result).toHaveClass(/pill-ok/);
-    // The honest note is the point: being right establishes nothing.
-    await expect(result).toContainText('one-in-two chance');
-    await expect(result).toContainText('that is not the point');
+    // THE HONEST NOTE IS THE POINT, and it used to be the wrong note. This called the
+    // choice "one-in-two", which it is not: the column headings say which source is
+    // which, so a reader who reads them is not guessing at all. Claiming a coin flip
+    // over a labelled choice overstates what the exhibit demonstrates.
+    await expect(result).toContainText('You read the label, not the bytes');
+    await expect(result).toContainText('this was not a blind test');
+    await expect(result).not.toContainText('one-in-two');
   });
 });
 
@@ -529,10 +610,14 @@ test.describe('Step 3: the recovery, checked by an independent route', () => {
     // NEUTRAL, not `held`. A miss is not the generator resisting — painting it as a
     // correct refusal would teach exactly the thing this lab exists to remove.
     await expect(verdict).toHaveAttribute('data-tone', 'neutral');
-    await expect(verdict.locator('.verdict-headline')).toHaveText('WRONG GUESS');
+    await expect(verdict.locator('.verdict-headline')).toHaveText('REJECTED');
     await expect(verdict).toContainText(`${missed} was not it`);
     await expect(verdict).toContainText('not that the key is sound');
     await expect(verdict).toContainText('You have ruled out one number');
+    // It names the oracle the attack actually uses, which is the thing that makes the
+    // whole search possible and the thing a beginner has no way to guess at.
+    await expect(verdict).toContainText('own integrity check');
+    await expect(verdict).toContainText('Nothing compared it with the real key');
     // Nothing was recovered, so nothing came back and Step 2 is still the trap.
     await expect(page.locator('#p3-guess-out .recovered-text')).toHaveCount(0);
   });
@@ -618,8 +703,13 @@ test.describe('Step 3: the recovery, checked by an independent route', () => {
     // find A key, it enumerated all of them. A page that claimed this over a search
     // which had stopped early would be overstating, which is why it sits beside the
     // assertion above that the full count and the hit are reported separately.
-    expect(text).toContain('they are every seed this generator can be given');
-    expect(text).toContain('every "random" key it will ever produce');
+    // SCOPED. This used to read "every seed this generator can be given" and "every
+    // key it will ever produce", and neither is true: seededBytes accepts any string
+    // at all -- Step 1's recipe box proves it -- and a generator run on past its first
+    // 32 bytes keeps going. What the sweep really enumerated is still the point.
+    expect(text).toContain('they are every four-digit PIN there is');
+    expect(text).toContain('every PIN a program could have started from');
+    expect(text).not.toContain('every seed this generator can be given');
     // And it says nothing was broken to do it, which is the lesson.
     expect(text).toContain('Nothing was broken to do this');
     expect(text).toContain('a full 256 bits');
@@ -827,6 +917,19 @@ test.describe('a result always describes inputs that are still on screen', () =>
     }
   });
 
+  test('the finish link waits for BOTH halves of Step 3', async ({ page }) => {
+    await boot(page, 'dark');
+    await makeKeys(page);
+    // A lucky one-in-four guess is a real recovery, and it used to be enough to offer
+    // the recap -- so a reader could be sent to the summary having seen neither the
+    // ten-thousand count nor the half that makes it mean anything.
+    await searchAll(page);
+    await expect(page.locator('#p3-next .next-step-link')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+    await expect(page.locator('#p3-next .next-step-link')).toBeVisible();
+  });
+
   test('a [hidden] element really is not rendered', async ({ page }) => {
     await boot(page, 'dark');
     // The `[hidden]` cascade trap: a class rule setting `display` outranks the UA's
@@ -839,6 +942,111 @@ test.describe('a result always describes inputs that are still on screen', () =>
         .map((el) => `${el.tagName.toLowerCase()}#${el.id}`)
     );
     expect(painted).toEqual([]);
+  });
+});
+
+test.describe('what one attempt looks like', () => {
+  test('the attacker is shown what it was handed BEFORE it runs', async ({ page }) => {
+    await boot(page, 'dark');
+    // Nothing to show before there is a ciphertext.
+    await expect(page.locator('#p3-intercepted summary')).toHaveCount(0);
+    await makeKeys(page);
+    // A reader cannot judge whether an attack is impressive or trivial until they know
+    // what it was given, so this is available before the search rather than after it.
+    const summary = page.locator('#p3-intercepted summary');
+    await expect(summary).toBeVisible();
+    await summary.click();
+    await expect(page.locator('#p3-intercepted [data-label="The nonce, which is not a secret"]')).toBeVisible();
+    await expect(page.locator('#p3-intercepted')).toContainText('no key, no PIN, no message');
+  });
+
+  test('a rejected guess shows the key it really built', async ({ page }) => {
+    await boot(page, 'dark');
+    witness(test.info().title, 'guess');
+    await makeKeys(page);
+    const pins = await page
+      .locator('.pin-choice input')
+      .evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
+    let missed: string | null = null;
+    for (const pin of pins) {
+      await page.locator(`#pin-${pin}`).check();
+      await page.getByRole('button', { name: 'Try this guess' }).click();
+      await expect(page.locator('[data-verdict="guess"]')).toBeVisible();
+      if ((await page.locator('[data-verdict="guess"]').getAttribute('data-tone')) === 'neutral') {
+        missed = pin;
+        break;
+      }
+    }
+    expect(missed).toBeTruthy();
+    // The common outcome of a single guess is a miss, so a miss that showed nothing
+    // meant the one state a reader almost always meets was the one state with no
+    // mechanism visible in it.
+    await page.locator('summary', { hasText: 'Show the key this wrong PIN produced' }).click();
+    const built = tight(
+      await page.locator(`[data-label="The 32 bytes behind the PIN ${missed}"] code`).innerText()
+    );
+    expect(built).toHaveLength(64);
+
+    // INDEPENDENT RE-DERIVATION: that really is the key those four digits produce,
+    // recomputed here with OpenSSL rather than with this lab's own modules.
+    const cipherKey = createHash('sha256').update(missed as string, 'utf8').digest();
+    expect(opensslKeystream(cipherKey, 0, Buffer.alloc(12), 32).toString('hex')).toBe(built);
+
+    // And it is NOT Source B's key, which is why the message refused it.
+    const real = tight(
+      await page.locator('.key-col[data-col="seeded"] .key-col-key-code').innerText()
+    );
+    expect(built).not.toBe(real);
+  });
+});
+
+test.describe('the comparison that is the remedy', () => {
+  test('names the one row that differs, and scopes what the null result proves', async ({
+    page,
+  }) => {
+    await boot(page, 'dark');
+    witness(test.info().title, 'no-seed');
+    await makeKeys(page);
+    await searchAll(page);
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+
+    const rows = page.locator('#p3-noseed-out .recap-table tbody tr');
+    await expect(rows).toHaveCount(5);
+    // CROSS-CHECK: the three rows that must read identically for both sources really do,
+    // and the row that must differ really does. A table that claimed "same cipher" while
+    // the two cells disagreed would pass a hardcoded assertion and fails this one.
+    for (const label of ['Encryption', 'Key length', 'Step 2 checks']) {
+      const cells = await rows
+        .filter({ hasText: label })
+        .locator('td')
+        .allInnerTexts();
+      expect(cells, `${label} must read the same for both sources`).toHaveLength(2);
+      expect(cells[0]).toBe(cells[1]);
+    }
+    const started = await rows.filter({ hasText: 'Where the key started' }).locator('td').allInnerTexts();
+    expect(started[0]).not.toBe(started[1]);
+    await expect(page.locator('#p3-noseed-out .claim-note')).toContainText(
+      'keep the encryption, change where the key starts'
+    );
+
+    // The null result is scoped: this attack found nothing, which is not a proof that
+    // none could.
+    await expect(page.locator('[data-verdict="no-seed"]')).toContainText(
+      'not a proof that no attack ever could'
+    );
+  });
+
+  test('the comparison is not drawn before both halves exist', async ({ page }) => {
+    await boot(page, 'dark');
+    witness(test.info().title, 'no-seed');
+    await makeKeys(page);
+    await page.getByRole('button', { name: 'Run the same search against Source A' }).click();
+    await page.waitForSelector('[data-verdict="no-seed"]');
+    // Source B has not been searched, so there is no "This PIN attack" row to fill in
+    // honestly -- and a comparison against an experiment that has not run is the exact
+    // defect this pass was opened to fix.
+    await expect(page.locator('#p3-noseed-out .recap-table')).toHaveCount(0);
   });
 });
 
@@ -943,6 +1151,24 @@ test.describe('the vocabulary this lab deliberately does not use', () => {
     expect(prose).toContain('tries');
   });
 
+  test('does not teach that determinism is the defect', async ({ page }) => {
+    await boot(page, 'dark');
+    // The wrong takeaway this lab is most likely to leave behind: that deterministic
+    // generators are insecure and the operating system produces numbers nobody could
+    // ever guess. Both halves are false and both are easy to pick up from Step 1, so
+    // the page has to say otherwise in its own voice.
+    await page.locator('#scenario-4 .check-opt').first().click();
+    const answer = await page.locator('#scenario-4 .check-result').innerText();
+    expect(answer).toContain('Every generator on this page is deterministic');
+    expect(answer).toContain('That is not the defect');
+    // And Step 1 says it where a reader meets the idea, not only in the quiz.
+    await page.getByRole('button', { name: 'Roll with this recipe' }).click();
+    await page.getByRole('button', { name: 'Roll with this recipe' }).click();
+    await expect(page.locator('[data-verdict="same-again"]')).toContainText(
+      'Repeating is not the fault'
+    );
+  });
+
   test('never claims that hashing a guessable seed helps', async ({ page }) => {
     await boot(page, 'dark');
     // The most common objection a reader arrives with, and the one a careless page
@@ -957,8 +1183,18 @@ test.describe('the vocabulary this lab deliberately does not use', () => {
     const answer = await page.locator('#scenario-3 .check-result').innerText();
     expect(answer).toContain('does not create choices that were never there');
     // The page admits that it does this itself, which is what stops the question being
-    // rhetorical: Source B's key IS the SHA-256 of a PIN.
+    // rhetorical. It also has to describe its own construction CORRECTLY: this said
+    // "Source B's key IS the SHA-256 of a PIN", and it is not -- the hash is ChaCha20's
+    // key, and the displayed key is the keystream that comes out of it.
     expect(answer).toContain('this page already does exactly that');
+    expect(answer).toContain('the PIN is hashed with SHA-256, and ChaCha20 turns that hash');
+    expect(answer).not.toContain('key IS the SHA-256');
+    // And a slow password hash is a real brake, which the page must not deny while
+    // making the point that it is not a fix.
+    await page.locator('#scenario-3 .check-opt').last().click();
+    const wrong = await page.locator('#scenario-3 .check-result').innerText();
+    expect(wrong).toContain('would be a real improvement in cost');
+    expect(wrong).toContain('not a fix');
     // And the remedy named is the right one: more starting points, from a source the
     // attacker cannot enumerate.
     expect(answer).toContain('more starting points');
