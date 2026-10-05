@@ -612,6 +612,14 @@ test.describe('Step 3: the recovery, checked by an independent route', () => {
 
     // The page distinguishes the two numbers rather than quoting the flattering one.
     expect(text).toContain(`A stranger would have stopped at try ${onTry.toLocaleString('en-GB')}`);
+    // And it says what the ten thousand actually ARE. This is the build brief's own
+    // framing and it is literally true of the sweep that just ran: one key was derived
+    // per candidate, and the candidates are the whole seed space — so the page did not
+    // find A key, it enumerated all of them. A page that claimed this over a search
+    // which had stopped early would be overstating, which is why it sits beside the
+    // assertion above that the full count and the hit are reported separately.
+    expect(text).toContain('they are every seed this generator can be given');
+    expect(text).toContain('every "random" key it will ever produce');
     // And it says nothing was broken to do it, which is the lesson.
     expect(text).toContain('Nothing was broken to do this');
     expect(text).toContain('a full 256 bits');

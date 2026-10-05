@@ -235,6 +235,13 @@ export function mountPanel3(): void {
               `stopped at try ${fmt(found.onTry)}.`,
             'Nothing was broken to do this. The cipher is correct, the key is a full 256 ' +
               'bits, and every check in Step 2 passed. The key was rebuilt by counting.',
+            // The brief's own framing, and it is literally true of the sweep that just
+            // ran: one key was derived per candidate, and the candidates are the whole
+            // seed space. A reader who has followed this far should be told that the
+            // page did not find A key, it enumerated ALL of them.
+            `And it is worse than one key. Those ${fmt(outcome.tried)} candidates are not a ` +
+              'sample — they are every seed this generator can be given, so the search ' +
+              'just worked out every "random" key it will ever produce. There are no others.',
           ],
         },
         [
