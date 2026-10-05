@@ -3,22 +3,23 @@ import type { Page } from '@playwright/test';
 /**
  * Composite-aware WCAG 1.4.3 contrast measurement, for THIS lab.
  *
- * The engine below is byte-identical to `crypto-lab-schnorr-forge`'s; every
- * passage that describes a page has been rewritten for this one.
+ * The engine below is code-identical to the reference implementation the build
+ * standard names; every passage that describes a page has been rewritten for this
+ * one.
  *
  * It exists because axe is not a complete contrast oracle. Two classes of text
  * never reach the `violations` array a gate asserts on:
  *
  * WHAT IT ADDS HERE IS REDUNDANCY, AND THAT WAS MEASURED RATHER THAN INHERITED.
  *
- * Most of this fleet's copies of this file open by saying that axe cannot resolve
- * a `color-mix()` backdrop, so a violations-only gate measures almost none of the
- * lab. THAT IS NOT TRUE OF THIS PAGE WITH THIS AXE VERSION, and the claim was
- * checked instead of copied: driven to the state carrying the most `color-mix()`
+ * The reference version of this file opens by saying that axe cannot resolve a
+ * `color-mix()` backdrop, so a violations-only gate measures almost none of the lab.
+ * THAT IS NOT TRUE OF THIS PAGE WITH THIS AXE VERSION, and the claim was checked
+ * instead of carried over: driven to the state carrying the most `color-mix()`
  * surfaces on the page, `axe.incomplete` came back EMPTY — no ids, no nodes. Then
  * `--held-text` was degraded from #9cc2ea to #4a6c8f and axe reported it as a
- * `color-contrast` VIOLATION, eleven nodes, not as an undecided one. axe-core
- * 4.12 resolves these fills.
+ * `color-contrast` VIOLATION, eleven nodes, not as an undecided one. axe-core 4.12
+ * resolves these fills.
  *
  * So the honest statement of this file's value on this page is in three parts.
  *
@@ -357,7 +358,7 @@ export async function auditContrast(
      *
      * An earlier gate judged every gradient at its worst *stop*, assuming that
      * stop covered the text wherever the text sat. That is right only for a
-     * gradient whose worst stop spans its element — elsewhere in this fleet a
+     * gradient whose worst stop spans its element — the reference implementation records a
      * `linear-gradient` running the full height of a several-screen document
      * put text near the top on a different surface than text near the bottom.
      * So each gradient is *sampled* at the text's real location instead:
@@ -366,7 +367,7 @@ export async function auditContrast(
      * `none`) is unmeasurable and paints nothing. This lab's stylesheet
      * declares no gradient today — its translucency all arrives as
      * `color-mix()`, which `resolve` handles as a flat colour — so this
-     * sampler is currently inert here. It is the fleet's paint model and stays
+     * sampler is currently inert here. It is the reference paint model and stays
      * whole: the first `linear-gradient` a redesign adds is measured on
      * arrival rather than silently misread.
      */
@@ -526,7 +527,7 @@ export async function auditContrast(
       // `fill` is black, and `getComputedStyle` reports that for stroke-only
       // geometry too — so a <line> used as a grid rule or axis reads as an
       // opaque black rectangle covering whatever it crosses. Compositing that
-      // invented a 3.82:1 failure elsewhere in this fleet for labels whose real
+      // invented a 3.82:1 failure, recorded by the reference implementation, for labels whose real
       // ratio was 6.15:1. This page's only SVG is the shared header's two
       // `aria-hidden` marks — the hamburger is three stroke-only <line>s, which
       // is exactly the shape the guard exists for — so nothing here carries SVG
@@ -737,12 +738,12 @@ export async function auditContrast(
      * background is transparent the value is taken from `<body>` instead.
      *
      * The failure this prevents is not hypothetical — it cost a run elsewhere in
-     * this fleet. A lab that sets `html, body { height: 100% }` has both boxes
+     * the build standard. A page that sets `html, body { height: 100% }` has both boxes
      * exactly one viewport tall while the document runs several viewports long,
      * so every element below the fold intersects neither, the walk ends with a
      * transparent backdrop, and it falls through to WHITE. In a dark theme that
      * reports muted footer text against a white page that does not exist — 34 of
-     * 38 findings in one run elsewhere in this fleet — and it can mask a real
+     * 38 findings in one recorded run — and it can mask a real
      * failure in the other direction just as easily.
      *
      * Whether it is a no-op here depends on declarations that are easy to

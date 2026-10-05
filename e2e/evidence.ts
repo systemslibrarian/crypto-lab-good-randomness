@@ -12,10 +12,9 @@
  * fails the run when a recorded kill names a pair its own test ran without
  * witnessing.
  *
- * `crypto-lab-privacy-pass` writes its observed lines into its ledger;
- * `crypto-lab-hidden-bit` and `crypto-lab-pqxdh-wire` deliberately do not, and
- * their reason is the better one — enforcement is the requirement, archival is a
- * choice. This lab does both, because `README.md` quotes the ledger, and a quoted
+ * §4.1c treats archival as a CHOICE and enforcement as the REQUIREMENT, and it is
+ * right to: a ledger nothing enforces is a second copy of an answer nobody is
+ * checking. This lab does both, because `README.md` quotes the ledger, and a quoted
  * record that nothing enforces is exactly the drift this file prevents.
  *
  * ONE THING WORTH KNOWING ABOUT THIS PARTICULAR LAB. Two of its six mutations own

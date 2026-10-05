@@ -223,29 +223,34 @@ self-consistent way would pass every other test here and fails that one. It also
 brief rules *out*: the page carries no entropy figure, no min-entropy, no test-battery name.
 
 **The accessibility gate.** `@axe-core/playwright` scans the production build for zero WCAG 2.1
-A/AA violations at **1280, 390 and 320 px**, and the Pages deploy is blocked if it fails. The gate
-is copied from `crypto-lab-schnorr-forge` — verified clean on every known oracle defect, including
-the per-side `paintedSides` fix that 129 of 131 `nontext.ts` files in the fleet still lack — with
-the oracle engines code-identical and every passage describing a page rewritten for this one.
+A/AA violations at **1280, 390 and 320 px**, and the Pages deploy is blocked if it fails. The
+oracle engines in `e2e/contrast.ts` and `e2e/nontext.ts` are the ones the build standard names as
+the reference implementation, taken across code-identical — including the per-side `paintedSides`
+border measurement — with every passage that describes a page rewritten for this one.
 
-One inherited claim was **checked rather than copied, and it was false here**: most of the fleet's
-copies of `contrast.ts` say axe cannot resolve a `color-mix()` backdrop. Driven to the state
-carrying the most `color-mix()` surfaces on this page, `axe.incomplete` came back **empty**, and a
-degraded `--held-text` was reported by axe as a `color-contrast` *violation*. axe-core 4.12
-resolves these fills. The arithmetic walk is kept as a second independent implementation — it
-reported the same defect over the composited `color-mix()` backdrop (the table below) — and the
-files now say so instead.
+**One inherited claim was checked rather than copied, and it was false here.** The reference
+`contrast.ts` opens by saying axe cannot resolve a `color-mix()` backdrop, so a violations-only
+gate measures almost nothing. Driven to the state carrying the most `color-mix()` surfaces on this
+page, `axe.incomplete` came back **empty** — no ids, no nodes — and a degraded `--held-text` was
+then reported by axe as a `color-contrast` *violation*, eleven nodes, not as an undecided one.
+axe-core 4.12 resolves these fills. The arithmetic walk is kept as a second independent
+implementation, which is worth having for its own reasons — two oracles agreeing beats one, and
+axe's willingness to resolve a backdrop is a property of an axe version a bump can change — and
+`contrast.ts`, `gate.ts` and `nontext-baseline.ts` now say that instead of the inherited sentence.
 
-The gate found one real defect, fixed in `src/style.css` with the measurement beside it. This lab
-is the first in the fleet to put an operable control on a **tinted** surface: the copy button
-inside each key column, whose background becomes a `color-mix()` of a tone and `--surface-2` once
-Step 3 marks the columns. At the fleet's `--control-border` of `#626d7a` — which clears the plain
-surface by three hundredths, 3.03:1 — that tint took it under, and the gate named
-`button.btn.btn-quiet.copy-btn` at 2.62:1 and 2.57:1 at all three widths. The token is now
-`#727e8c`: 3.27:1 against the worse of those backdrops, 3.85:1 against the plain surface.
+**The gate found one real defect**, fixed in `src/style.css` with the measurement beside it: an
+operable control on a **tinted** surface. The copy button inside each key column sits on
+`--surface-2` until Step 3 marks the columns, at which point the background becomes a
+`color-mix()` of a tone and that surface. At the `--control-border` the reference stylesheet
+carries, `#626d7a` — which clears the plain surface by three hundredths, 3.03:1 — that tint took
+it under, and the gate named `button.btn.btn-quiet.copy-btn` at 2.62:1 and 2.57:1 at all three
+widths. The token is now `#727e8c`: 3.27:1 against the worse of those backdrops, 3.85:1 against
+the plain surface. Raising the token was the right fix rather than reducing the tint, because the
+tint is what Step 3 uses to say which column it recovered.
 
 Both oracles were then **proved live** rather than inferred from a green run, because an empty
-finding set is also what an oracle that never ran produces:
+finding set is also what an oracle that never ran produces — which is the whole reason the build
+standard requires this step:
 
 | Oracle | Degradation | Build | CSS hash | Reported |
 |---|---|---|---|---|
@@ -317,8 +322,8 @@ reader's own machine.
 Three values ship as marked placeholders because the catalog pins them centrally, and `brief.md`
 defers all three:
 
-- **`--accent`** is the documented fleet fallback `#35d6bb` in `src/style.css`, commented as a
-  placeholder. The shared top bar reads it.
+- **`--accent`** is the fallback the build standard documents, `#35d6bb`, set in `src/style.css`
+  and commented as a placeholder. The shared top bar reads it.
 - **The favicon emoji** is a die, in `index.html`.
 - **The category** is not set anywhere in this repository; it belongs on the catalog card.
 

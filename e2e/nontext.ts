@@ -3,16 +3,16 @@ import type { Page } from '@playwright/test';
 /**
  * WCAG 1.4.11 (Non-text Contrast) and 1.4.3 for GENERATED CONTENT.
  *
- * These are the two failure classes this fleet's gates could not see at all.
- * `axe` has no rule for either. The arithmetic contrast walk in `contrast.ts`
+ * These are the two failure classes a gate built on `axe` alone cannot see: `axe`
+ * has no rule for either. The arithmetic contrast walk in `contrast.ts`
  * measures *text nodes*, so it cannot reach a control's boundary and cannot
  * reach a `::before`/`::after` glyph, because a pseudo-element is not an
  * element and owns no text node.
  *
- * The engine below is byte-identical to `crypto-lab-schnorr-forge`'s, including
- * the per-side `paintedSides` fix that 129 of the fleet's 131 `nontext.ts` files
- * still lack — they compute `hasBorder` from `borderTopStyle` while testing all
- * four border widths, so a control bordered on one side only is mis-measured.
+ * The engine below is code-identical to the reference implementation the build
+ * standard names, including its per-side `paintedSides` border measurement —
+ * computing `hasBorder` from `borderTopStyle` while testing all four border widths
+ * mis-measures a control bordered on one side only, and this does not do that.
  * Every passage that describes a page has been rewritten for this one.
  *
  * IN THIS LAB the control-boundary half is the live one, and it FOUND SOMETHING,
@@ -24,13 +24,13 @@ import type { Page } from '@playwright/test';
  * control needs.
  *
  * But a token is a declaration, and what a control is judged on is the surface
- * OUTSIDE it. This lab is the first in the fleet to put an operable control on a
- * tinted surface: the copy button inside each `.key-col`, whose background becomes a
- * `color-mix()` of a tone and `--surface-2` once Step 3 marks the columns. At the
- * fleet's token value of #626d7a — which clears the plain surface by three
- * hundredths — that tint took it under, and this oracle named the button at 2.62:1
- * and 2.57:1 in the marked state at all three widths. The token is now #727e8c. The
- * full record is in `nontext-baseline.ts`.
+ * OUTSIDE it. The shape that bit here is an operable control on a TINTED surface:
+ * the copy button inside each `.key-col`, whose background becomes a `color-mix()`
+ * of a tone and `--surface-2` once Step 3 marks the columns. At the #626d7a the
+ * reference stylesheet carries — which clears the plain surface by three hundredths
+ * — that tint took it under, and this oracle named the button at 2.62:1 and 2.57:1
+ * in the marked state at all three widths. The token is now #727e8c. The full
+ * record is in `nontext-baseline.ts`.
  *
  * THE TWO SHAPES THIS PAGE HAS THAT MOST LABS DO NOT, and why they are the ones
  * to watch here:
@@ -48,11 +48,11 @@ import type { Page } from '@playwright/test';
  *    skipped.
  *
  * The baseline is empty NOW, after that fix, which is the state that needs the most
- * care: an empty finding set is also what an oracle that never ran produces, and
- * thirteen repos in this fleet certified themselves clean that way. So this oracle
- * was also proved live deliberately, by degrading `--control-border` to the
- * `--border` value and watching it name six controls in the arrival state; the full
- * record, including the build and bundle-hash confirmations, is in
+ * care: an empty finding set is also what an oracle that never ran produces, which is
+ * exactly why §4.1c of the build standard requires the oracle to be proved rather
+ * than inferred from a green run. So it was: `--control-border` was degraded to the
+ * `--border` value and this file named six controls in the arrival state. The full
+ * record, including the build and CSS-hash confirmations, is in
  * `nontext-baseline.ts`.
  *
  * This oracle judges each control as painted, at every driven state — including
@@ -305,7 +305,7 @@ export async function auditNonText(page: Page, within = 'body *'): Promise<NonTe
      *
      * An earlier gate judged every gradient at its worst *stop*, assuming that
      * stop covered the text wherever the text sat. That is right only for a
-     * gradient whose worst stop spans its element — elsewhere in this fleet a
+     * gradient whose worst stop spans its element — the reference implementation records a
      * full-height `linear-gradient` on `body` put controls near the top of a
      * several-screen document on a different surface than controls near the
      * bottom. So each gradient is *sampled* at the point being judged instead:
@@ -314,7 +314,7 @@ export async function auditNonText(page: Page, within = 'body *'): Promise<NonTe
      * `none`) is unmeasurable and paints nothing. This lab's stylesheet
      * declares no gradient today — every fill is flat hex or `color-mix()`,
      * which `resolve` handles as a flat colour — so this sampler is currently
-     * inert here; it is the fleet's shared paint model and stays whole so the
+     * inert here; it is the reference paint model and stays whole so the
      * first gradient a redesign adds is measured on arrival.
      */
     const sampleLayer = (layer: string, rect: DOMRect, p: Point): RGBA => {
@@ -440,7 +440,7 @@ export async function auditNonText(page: Page, within = 'body *'): Promise<NonTe
      * An element's own painted background AT A POINT — gradients included.
      *
      * The first version of this read `background-color` alone, and that is not
-     * what a page paints. Elsewhere in this fleet a lab reported `rgba(0,0,0,0)`
+     * what a page paints. The reference implementation records a case reporting `rgba(0,0,0,0)`
      * for both `html` and `body` because its dark canvas was two radial
      * gradients; the walk therefore found nothing opaque, fell through to WHITE,
      * and reported a bright cyan disclosure triangle at 3.95:1 against a page
@@ -533,11 +533,11 @@ export async function auditNonText(page: Page, within = 'body *'): Promise<NonTe
 
       const cs = styleOf(el);
       const fillOwn = ownPaint(cs, r, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
-      // PER SIDE, not `border-top` for all four. An earlier fleet form of this
+      // PER SIDE, not `border-top` for all four. An earlier form of this engine
       // read `border-*-width` on every side but then measured `borderTopColor`
       // alone, which silently measures the WRONG EDGE whenever a control is
-      // delineated by one side only — elsewhere in this fleet that reported
-      // 1.12:1 for a selected tab whose entire boundary was a 3px
+      // delineated by one side only. The build standard records the case this fix
+      // came from: 1.12:1 for a selected tab whose entire boundary was a 3px
       // `border-bottom` underline. THIS LAB IS FULL OF ONE-SIDED BORDERS and is
       // precisely the shape that fix exists for: every `.verdict` carries a 3px
       // tone-coloured `border-left` over a 1px tinted frame, and `.claim-note`,

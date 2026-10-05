@@ -25,11 +25,11 @@ export const NARROWEST = { width: 320, height: 800 };
 /**
  * Shared machinery for the WCAG gate.
  *
- * Copied from `crypto-lab-schnorr-forge` — the gate verified clean on every known
- * oracle defect, including the per-side `paintedSides` fix that 129 of the fleet's
- * 131 `nontext.ts` files still lack — and then rewritten passage by passage for
- * what THIS lab paints. The oracle engines in `contrast.ts` and `nontext.ts` are
- * code-identical to that lab's; everything that describes a page is about this one.
+ * Taken from the reference gate the build standard names — the one it records as
+ * verified clean on every known oracle defect, including the per-side `paintedSides`
+ * border measurement — and then rewritten passage by passage for what THIS lab
+ * paints. The oracle engines in `contrast.ts` and `nontext.ts` are code-identical to
+ * that reference; everything that describes a page is about this one.
  *
  * Five rules govern everything here, and each one corrects something the retired
  * template gate did:
@@ -60,12 +60,12 @@ export const NARROWEST = { width: 320, height: 800 };
  *     at all.
  *
  *  4. `violations` IS NOT THE WHOLE ORACLE. See `scan`, which asserts nine things.
- *     Note what this lab does NOT claim, because most of the fleet's copies of
- *     this file do: axe-core 4.12 resolves this page's `color-mix()` fills
- *     perfectly well, and `incomplete` comes back EMPTY here. That was measured,
- *     not assumed. The other eight assertions are still the reason this gate is
- *     worth more than an axe call — reflow, non-text contrast and the
- *     focusable-but-invisible check have no axe rule at all.
+ *     Note what this file does NOT claim, where the reference it came from does:
+ *     axe-core 4.12 resolves this page's `color-mix()` fills perfectly well, and
+ *     `incomplete` comes back EMPTY here. That was measured, not assumed. The other
+ *     eight assertions are still the reason this gate is worth more than an axe call
+ *     — reflow, non-text contrast and the focusable-but-invisible check have no axe
+ *     rule at all.
  *
  *  5. IT HAD NO REFLOW, NON-TEXT-CONTRAST OR GENERATED-CONTENT ORACLE. The old
  *     spec hand-rolled one luminance check over two input selectors, reading
@@ -80,9 +80,9 @@ export const NARROWEST = { width: 320, height: 800 };
  * Wait for every running animation and transition to drain.
  *
  * Two rAFs are not enough. A transition sampled mid-flight has a colour that
- * exists in no state of the page, and axe will happily report it: elsewhere in this
- * fleet that produced a phantom 2.00:1 failure on a button whose settled ratio is
- * 9:1. Transitions also drain in waves rather than in one batch, so a poll for
+ * exists in no state of the page, and axe will happily report it: the build standard
+ * records a phantom 2.00:1 failure produced that way, on a button whose settled ratio
+ * was 9:1. Transitions also drain in waves rather than in one batch, so a poll for
  * "nothing running right now" can exit through a gap between waves — hence six
  * consecutive quiet frames rather than one.
  *
@@ -136,7 +136,7 @@ export async function settle(page: Page, budgetMs = 4000): Promise<void> {
  * THIS LAB IS CURRENTLY IMMUNE BY CONSTRUCTION, and the assertion is how that stays
  * true. `src/style.css` declares no `@keyframes` whatever, so no content here is
  * parked at `opacity: 0` waiting for an animation's `forwards` fill to reveal it.
- * The shape is a real hazard in this fleet — patron-shield scanned both its query
+ * The build standard records it as a real hazard — one lab scanned both its query
  * masks invisible in every run — and it would arrive here the first time somebody
  * animates the progress bar or fades a verdict in, both of which are natural things
  * to want on a page built out of searches and verdicts. Running it at every state
@@ -200,8 +200,8 @@ export function watchPageErrors(page: Page): string[] {
  *
  * The shared `.cl-topbar` carries an explicit `role="banner"`. This lab's hero is a
  * `<div class="cl-hero">` and not a `<header>`, so nothing here implies a second
- * banner today — but the shared bar ships `dedupeBanner()` because other labs in
- * this fleet DID ship one, and the hero markup is the part of this page most likely
+ * banner today — but the shared bar ships `dedupeBanner()` because labs this header is
+ * shared with have shipped one, and the hero markup is the part of this page most likely
  * to be re-templated from a lab that uses `<header>`. The page's one real
  * `<header>`-shaped element, the `.scripture-footer`, is a `<footer>`. Asserting
  * the OUTCOME rather than the markup is what catches that edit.
@@ -229,9 +229,9 @@ export async function assertSingleBanner(page: Page): Promise<void> {
  * role: `ul.dice` (the five faces), `ul.check-rows` (the four checks, twice over in
  * Step 2), `ul.check-opts` (every question's answers), `ol.case-list` (the pinned
  * cases) and `ul.footer-links`. All compensate the documented way — an explicit
- * `role="list"` on the container and `role="listitem"` on every child — so here,
- * unlike most of this fleet, an explicit role on a list is the fix rather than the
- * defect.
+ * `role="list"` on the container and `role="listitem"` on every child — so here an
+ * explicit role on a list is the fix rather than the defect, which is the opposite of
+ * how an explicit ARIA role usually reads.
  *
  * What is asserted is therefore the SHAPE of that fix: any explicit role on a
  * `ul`/`ol` must be `list` (any other value orphans every `<li>` under it), and a
@@ -262,13 +262,13 @@ export async function assertListSemantics(page: Page): Promise<void> {
  * Shared setup. Runs before EVERY test that imports it, so an assertion here fails
  * all of them at once, under whatever name those tests carry.
  *
- * SO THIS FUNCTION ASSERTS STRUCTURE AND NEVER PRODUCT COPY. On 2026-09-26
- * crypto-lab-mceliece-gate changed one textarea's default string; its `gate.ts`
- * still asserted the old sentence, `boot()` threw, both axe runs failed, the build
- * job failed, the deploy was skipped, and `deploy-sync` reported the lab stale. The
- * step that went red was called "Accessibility gate", and four of its six a11y
- * tests had passed. For three days the live site served security claims that `main`
- * had already corrected, and the one red thing in sight named the wrong subject.
+ * SO THIS FUNCTION ASSERTS STRUCTURE AND NEVER PRODUCT COPY. §4.1a of the build
+ * standard records what that costs: a lab changed one textarea's default string, its
+ * `gate.ts` still asserted the old sentence, `boot()` threw, both axe runs failed,
+ * the build job failed and the deploy was skipped. The step that went red was called
+ * "Accessibility gate", and four of its six a11y tests had passed — so for three days
+ * the live site served claims that `main` had already corrected, and the one red
+ * thing in sight named the wrong subject.
  *
  * Structure is: the control EXISTS, the arrival state is the one that ships, counts,
  * `[hidden]`/`toBeEmpty()` on regions nothing has rendered into yet, `details[open]`
@@ -642,13 +642,14 @@ async function soft(fn: () => Promise<void>): Promise<void> {
  * the arithmetic text walk cannot reach a control's boundary or a `::before` glyph,
  * because a pseudo-element is not an element and owns no text node.
  *
- * IT IS CALLED FROM `scan()`, deliberately and not by accident. Fleet-wide this
- * oracle had been called from inside a soft wrapper AFTER its
- * `if (!COLLECTING) return` guard — so in a strict run, which is every run in CI and
- * every run anyone reads as a pass, the guard returned first and `nontext.ts` never
- * executed at all. Thirteen repos certified themselves clean on an oracle that had
- * never looked. Calling it here means it runs at every driven state, including
- * `:hover`, and this repo's baseline was captured by that live path.
+ * IT IS CALLED FROM `scan()`, deliberately and not by accident. The build standard
+ * records the defect this avoids: the oracle called from inside a soft wrapper AFTER
+ * its `if (!COLLECTING) return` guard, so in a strict run — which is every run in CI
+ * and every run anyone reads as a pass — the guard returned first and `nontext.ts`
+ * never executed at all, and the gates that shipped that way certified themselves
+ * clean on an oracle that had never looked. Calling it here means it runs at every
+ * driven state, including `:hover`, and this repo's baseline was captured by that
+ * live path.
  *
  * A check that merely logs is not a gate, so it ratchets: anything NOT in the
  * baseline fails, anything in the baseline that got WORSE fails, and anything in the

@@ -6,9 +6,9 @@ name: Deploy to GitHub Pages
 # the deploy runs, a bump only has to satisfy the lighter of the two to merge
 # itself, the heavier one fails afterwards on the merge commit where no pull
 # request is watching, and `main` silently stops shipping with nothing red in
-# between. crypto-lab-e91 drifted exactly that way and was found serving a stale
-# build; nineteen labs had the same shape. See §6.1-6.2 of the catalog's
-# audits/_MASTER-TEMPLATE.md, which `gate-sync.js check` enforces.
+# between. §6.1-6.2 of the catalog's audits/_MASTER-TEMPLATE.md records a lab found
+# serving a stale build for exactly that reason, which is what `gate-sync.js check`
+# now enforces.
 
 on:
   push:
@@ -60,15 +60,16 @@ jobs:
       # correctness suites never blocked a publish -- those repos could ship a
       # build whose cryptography was broken as long as the browser specs passed.
       # A test step that runs ZERO tests EXITS 0, and the gate then passes with a
-      # log reading zero tests -- which is how crypto-lab-padding-oracle ended up
-      # with a hand-written harness nothing ran. So the COUNT is asserted, not
-      # just the exit status, in the same step that produces it.
+      # log reading zero tests -- §4.1e of the build standard records a lab that
+      # ended up with a hand-written harness nothing ran for exactly that reason. So
+      # the COUNT is asserted, not just the exit status, in the same step that
+      # produces it.
       #
       # NO_COLOR, and the sed, are both load-bearing. Vitest colourizes in CI, so
       # the raw log reads `Test Files <ESC>[22m <ESC>[1m<ESC>[32m3 passed` and a
       # regex expecting `Test Files  3 passed` does not match -- this exact guard
-      # failed its first CI run that way elsewhere in the fleet, on a suite where
-      # every test had just passed. A guard that goes red when the thing it guards
+      # is recorded in the build standard as having failed its first CI run exactly
+      # that way, on a suite where every test had just passed. A guard that goes red when the thing it guards
       # is fine is as bad as one that stays green when it is not, so the escape
       # codes are removed twice over rather than assumed absent.
       - name: Unit tests (RFC 8439 KATs, determinism, the recovery)
@@ -163,9 +164,9 @@ jobs:
           # a workflow_dispatch through the API is not suppressed. The dispatched run
           # is the same gate-then-deploy pipeline, so a bad merge still ships nothing.
           #
-          # This lab's workflow file really is deploy.yml. The fleet is not
-          # consistent about that name, and a copied name 404s ONLY on the
-          # auto-merge path and only after the merge has already landed.
+          # This lab's workflow file really is deploy.yml. The build standard warns
+          # that the name is not consistent everywhere, and a copied name 404s ONLY
+          # on the auto-merge path and only after the merge has already landed.
           gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main \
             || echo "::warning::deploy dispatch failed; run deploy.yml by hand"
         env:

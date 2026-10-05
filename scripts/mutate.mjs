@@ -19,17 +19,15 @@
  *   4. A patch that does not compile is DOES NOT BUILD,
  *      and is never a kill.                                -> `build()`
  *
- * Rule 3 is a property rather than a mechanism, and the fleet satisfies it two
- * ways: crypto-lab-privacy-pass requires the built bundle's hash to move;
- * crypto-lab-hidden-bit classifies the failure instead, refusing any red run
- * whose output looks like a build error or a server that never started.
- * crypto-lab-pqxdh-wire does both. THIS SCRIPT DOES BOTH, and the second half
- * matters more than it looks here: Playwright's `reuseExistingServer:
- * !process.env.CI` means a preview server already listening on 4213 is reused
- * and the webServer command — the command that BUILDS — never runs at all. A
- * mutation run against a stale server would read every mutation as a survivor.
- * So `CI=1` is set on every child process, which turns that reuse off and makes
- * the port strict.
+ * Rule 3 is a property rather than a mechanism, and §4.1c allows two ways of
+ * satisfying it: require the built bundle's hash to MOVE, or CLASSIFY the failure
+ * and refuse any red run whose output looks like a build error or a server that
+ * never started. THIS SCRIPT DOES BOTH, and the second half matters more than it
+ * looks here: Playwright's `reuseExistingServer: !process.env.CI` means a preview
+ * server already listening on 4213 is reused and the webServer command — the
+ * command that BUILDS — never runs at all. A mutation run against a stale server
+ * would read every mutation as a survivor. So `CI=1` is set on every child
+ * process, which turns that reuse off and makes the port strict.
  *
  * Rule 1 is why the baseline is re-measured in the same invocation rather than
  * assumed from a previous green run: a test that was already failing for an

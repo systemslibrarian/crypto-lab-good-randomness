@@ -9,9 +9,9 @@ import { enforceLedger, ran, witness } from './evidence';
  *
  * These live here and not in `gate.ts`'s `boot()` on purpose. An assertion in a
  * shared setup fails every accessibility test at once, under the name "Accessibility
- * gate" — crypto-lab-mceliece-gate lost three days of corrected security claims to
- * exactly that on 2026-09-26. Here, a failure says "claims", which is what actually
- * changed.
+ * gate"; §4.1a of the build standard records a lab losing three days of corrected
+ * security claims to exactly that. Here, a failure says "claims", which is what
+ * actually changed.
  *
  * THE RULE THAT MAKES THESE WORTH ANYTHING: compare two values the page itself
  * printed, rather than asserting against a hardcoded string. A test that re-derives
@@ -831,7 +831,7 @@ test.describe('a result always describes inputs that are still on screen', () =>
     await boot(page, 'dark');
     // The `[hidden]` cascade trap: a class rule setting `display` outranks the UA's
     // `[hidden]` rule, so an element paints while the code believes it is hidden. Four
-    // live instances were found across this fleet on 2026-08-14 alone. Asked of the
+    // live instances are recorded in the build standard. Asked of the
     // DOM rather than of the stylesheet.
     const painted = await page.evaluate(() =>
       Array.from(document.querySelectorAll<HTMLElement>('[hidden]'))

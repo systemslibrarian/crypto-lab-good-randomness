@@ -13,10 +13,9 @@
      3:1 (WCAG 1.4.11), which --border at about 1.4:1 does not reach. Decorative
      dividers use --border; anything a reader can operate uses this.
 
-     NOT #626d7a, WHICH IS THE FLEET'S VALUE AND IS TOO DARK FOR THIS PAGE. It
-     measures 3.03:1 against --surface-2 -- a margin of three hundredths -- and
-     this lab is the first in the fleet to put an operable control on a TINTED
-     surface: the copy button inside each `.key-col`, whose background becomes
+     NOT #626d7a, WHICH THE REFERENCE STYLESHEET CARRIES AND WHICH IS TOO DARK FOR
+     THIS PAGE. It measures 3.03:1 against --surface-2 -- a margin of three
+     hundredths -- and this page puts an operable control on a TINTED surface: the copy button inside each `.key-col`, whose background becomes
      `color-mix(alarm 10%, surface-2)` or `color-mix(ok 9%, surface-2)` once Step 3
      has marked the columns. The gate measured the copy button's edge at 2.62:1 and
      2.57:1 there and named it. #727e8c clears 3.27:1 against the worse of those
@@ -28,8 +27,8 @@
 
   /* PLACEHOLDER PENDING CENTRAL ASSIGNMENT. The catalog pins each lab's accent
      and the build brief defers it ("--accent: [central assignment]"), so this is
-     the documented fleet fallback rather than a choice made here. The shared top
-     bar reads it. See README "Pending central assignment". */
+     the fallback the build standard documents rather than a choice made here. The
+     shared top bar reads it. See README "Pending central assignment". */
   --accent: #35d6bb;
   --accent-ink: #04201b; /* text on an accent fill */
   --accent-text: #6ee3cd; /* accent as text / links / borders on the page bg */
@@ -89,7 +88,7 @@ body {
   outline-offset: 2px;
 }
 
-/* ---------- hero (this lab owns it; fleet-consistent by review) ---------- */
+/* ---------- hero (this lab owns it; matches the standard by review) ---------- */
 .cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
 .cl-hero-main{flex:1 1 22rem;min-width:min(100%,18rem);}
 .cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;}
@@ -99,17 +98,17 @@ body {
 .cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--accent-text);}
 .cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;}
 @media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}}
-/* Reflow fix for the standard hero, carried from the fleet with its measurement
-   (WCAG 1.4.10). The mobile rule above gives `.cl-hero-why` `width: 100%` while
-   the fleet stylesheet leaves it `content-box`, so its own 1.05rem of side
-   padding and 1px of border are ADDED to that 100% -- 361 + 33.6 + 2 = 397px
+/* Reflow fix for the standard hero, carried with its measurement (WCAG 1.4.10).
+   The mobile rule above gives `.cl-hero-why` `width: 100%` while the standard
+   snippet leaves it `content-box`, so its own 1.05rem of side padding and 1px of
+   border are ADDED to that 100% -- 361 + 33.6 + 2 = 397px
    inside a 390px viewport. The column flex line then grows to the widest item,
    which drags `.cl-hero-main` with it, and the gate names hero-main while the
    cause is hero-why.
 
    `min-width: 0` on the mobile hero-main is the second half of the same fix. It
-   is not load-bearing at this lab's 18rem and is kept because the fleet value is
-   20rem, which does not fit at 320px -- so a future re-template from another lab
+   is not load-bearing at this page's 18rem and is kept because the standard
+   snippet's value is 20rem, which does not fit at 320px -- so a future re-template
    cannot reintroduce it. */
 .cl-hero-why{box-sizing:border-box;}
 @media (max-width:640px){.cl-hero-main{min-width:0;flex-basis:auto;}}
