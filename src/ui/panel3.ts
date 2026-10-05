@@ -389,9 +389,13 @@ export function mountPanel3(): void {
                 ]),
               ]),
               el('p', { class: 'claim-note' }, [
-                'One row differs, and it is not the cipher, the key length or anything a ' +
-                  'check could see. That is the whole lab: keep the encryption, change where ' +
-                  'the key starts.',
+                // "One row differs" was wrong: two do. The honest division is between
+                // the rows that describe a CHOICE and the one that describes what that
+                // choice cost, and saying it that way is sharper as well as true.
+                'Only one row describes a decision somebody made — and it is not the cipher, ' +
+                  'the key length, or anything a check could see. The last row is what that ' +
+                  'one decision cost. That is the whole lab: keep the encryption, change ' +
+                  'where the key starts.',
               ]),
             ];
       render(

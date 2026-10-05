@@ -1001,7 +1001,7 @@ test.describe('what one attempt looks like', () => {
 });
 
 test.describe('the comparison that is the remedy', () => {
-  test('names the one row that differs, and scopes what the null result proves', async ({
+  test('names the decision row, and scopes what the null result proves', async ({
     page,
   }) => {
     await boot(page, 'dark');
@@ -1026,9 +1026,21 @@ test.describe('the comparison that is the remedy', () => {
     }
     const started = await rows.filter({ hasText: 'Where the key started' }).locator('td').allInnerTexts();
     expect(started[0]).not.toBe(started[1]);
-    await expect(page.locator('#p3-noseed-out .claim-note')).toContainText(
-      'keep the encryption, change where the key starts'
-    );
+    const note = page.locator('#p3-noseed-out .claim-note');
+    await expect(note).toContainText('keep the encryption, change where the key starts');
+    // THE NOTE MUST NOT MISCOUNT ITS OWN TABLE. It said "one row differs" when two do
+    // -- the setup row and the outcome row -- which is the kind of small overstatement
+    // this lab cannot afford. The division it draws now is between the rows that
+    // describe a decision and the one that describes what the decision cost.
+    await expect(note).toContainText('Only one row describes a decision');
+    await expect(note).not.toContainText('One row differs');
+    const differing = (await rows.evaluateAll((rs) =>
+      rs.filter((r) => {
+        const [b, a] = [...r.querySelectorAll('td')].map((c) => c.textContent?.trim());
+        return b !== a;
+      }).length
+    )) as number;
+    expect(differing, 'two rows differ: the decision and its consequence').toBe(2);
 
     // The null result is scoped: this attack found nothing, which is not a proof that
     // none could.

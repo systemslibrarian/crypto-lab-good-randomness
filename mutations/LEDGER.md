@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T12:00:23.489Z.
+Generated 2026-10-05T12:05:02.875Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 
@@ -16,22 +16,22 @@ Generated 2026-10-05T12:00:23.489Z.
 3. the run served the MUTATED code (bundle hash moved, and the red run is not a build or server failure)
 4. a patch that does not compile is DOES NOT BUILD and is never a kill
 
-Unmutated bundle `a9b9913d0d91ce39`; restored bundle `a9b9913d0d91ce39` (matches).
+Unmutated bundle `f819f1fb9f16bec8`; restored bundle `f819f1fb9f16bec8` (matches).
 
 ## Results
 
 | Mutation | Verdict | Outcome | Bundle moved | Owning test |
 |---|---|---|---|---|
-| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 6548cb6b03c7a4d7 | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 77af35c97d33725d | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | a9b9913d0d91ce39 → e65c0eb5096689b8 | the obviously bad generator is caught, and the page counts what it still passed |
-| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 6e541ccf648aa5fe | the recovered key is real: rebuilt and the message opened by OpenSSL |
-| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 69108469993ffe9c | every check passes, and the key is recovered anyway |
-| `M6-fixture-check-broken` | `recovered` | **KILLED** | a9b9913d0d91ce39 → 75b2f5b02b3f9e29 | every check passes, and the key is recovered anyway |
-| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | a9b9913d0d91ce39 → 494e252e0ef3b6b3 | the same search against the real key finds nothing, and proves it did the work |
-| `M8-source-a-borrows-source-b-result` | `look-random` | **KILLED** | a9b9913d0d91ce39 → 04f5cffd7b5a729e | Source A is never reported as searched until it has been |
-| `M9-comparison-drawn-before-both-halves-exist` | `no-seed` | **KILLED** | a9b9913d0d91ce39 → 8b453b1e7877ae0c | the comparison is not drawn before both halves exist |
-| `M10-rejected-guess-discloses-the-wrong-key` | `guess` | **KILLED** | a9b9913d0d91ce39 → 93765535c7d68085 | a rejected guess shows the key it really built |
+| `M1-recovery-claims-success-without-decrypting` | `recovered` | **KILLED** | f819f1fb9f16bec8 → 073744d41b1c7dfd | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M2-recovery-claims-failure-after-a-real-decryption` | `recovered` | **KILLED** | f819f1fb9f16bec8 → dd1c86a4a86ecf62 | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M3-look-random-check-hardwired-to-pass` | `visible-pattern` | **KILLED** | f819f1fb9f16bec8 → 85a3ea32033b370d | the obviously bad generator is caught, and the page counts what it still passed |
+| `M4-seeded-generator-swapped-for-the-csprng` | `recovered` | **KILLED** | f819f1fb9f16bec8 → 24856fa4d92f23ee | the recovered key is real: rebuilt and the message opened by OpenSSL |
+| `M5-negative-claim-text-deleted` | `recovered` | **KILLED** | f819f1fb9f16bec8 → 0eec39ccd2133547 | every check passes, and the key is recovered anyway |
+| `M6-fixture-check-broken` | `recovered` | **KILLED** | f819f1fb9f16bec8 → 27c4071c854f8c8f | every check passes, and the key is recovered anyway |
+| `M7-real-key-panel-searches-the-seeded-ciphertext` | `no-seed` | **KILLED** | f819f1fb9f16bec8 → c7e1e7d06d9ccaae | the same search against the real key finds nothing, and proves it did the work |
+| `M8-source-a-borrows-source-b-result` | `look-random` | **KILLED** | f819f1fb9f16bec8 → 86ae799a360e3506 | Source A is never reported as searched until it has been |
+| `M9-comparison-drawn-before-both-halves-exist` | `no-seed` | **KILLED** | f819f1fb9f16bec8 → 1bb189386c8cd3e6 | the comparison is not drawn before both halves exist |
+| `M10-rejected-guess-discloses-the-wrong-key` | `guess` | **KILLED** | f819f1fb9f16bec8 → 0d58f9c71b42057e | a rejected guess shows the key it really built |
 
 ## Each mutation in full
 
@@ -49,7 +49,7 @@ PINNED TO SEED 0001, which is deliberate and is the difference between a determi
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 6548cb6b03c7a4d7.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 073744d41b1c7dfd.
 
 ```
 Error: Unsupported state or unable to authenticate data
@@ -75,7 +75,7 @@ The page's own did-not-find branch exists for a build that is broken, and it say
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 77af35c97d33725d.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → dd1c86a4a86ecf62.
 
 ```
 Error: the recovery must name the PIN it found
@@ -99,7 +99,7 @@ The row still prints its real measurement, which is what makes this a good mutat
 
 **Owning test.** `the obviously bad generator is caught, and the page counts what it still passed` — asserts the `visible-pattern` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → e65c0eb5096689b8.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 85a3ea32033b370d.
 
 ```
 Error: expect(locator).toHaveClass(expected) failed
@@ -126,7 +126,7 @@ The patch keeps `keystream` and `ZERO_NONCE` used, through a `void`, because `no
 
 **Owning test.** `the recovered key is real: rebuilt and the message opened by OpenSSL` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 6e541ccf648aa5fe.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 24856fa4d92f23ee.
 
 ```
 Error: the recovery must name the PIN it found
@@ -148,7 +148,7 @@ Received: undefined
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 69108469993ffe9c.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 0eec39ccd2133547.
 
 ```
 Error: expect(locator).toContainText(expected) failed
@@ -173,7 +173,7 @@ The bound is moved to 33 rather than narrowed, and that is the deterministic cho
 
 **Owning test.** `every check passes, and the key is recovered anyway` — asserts the `recovered` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 75b2f5b02b3f9e29.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 27c4071c854f8c8f.
 
 ```
 Error: expect(locator).toHaveCount(expected) failed
@@ -200,7 +200,7 @@ The page catches it honestly rather than rendering it as a result. Its real-key 
 
 **Owning test.** `the same search against the real key finds nothing, and proves it did the work` — asserts the `no-seed` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 494e252e0ef3b6b3.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → c7e1e7d06d9ccaae.
 
 ```
 Error: expect(locator).toHaveAttribute(expected) failed
@@ -227,7 +227,7 @@ Nothing else breaks under it. The recovery still works, the tone is still right,
 
 **Owning test.** `Source A is never reported as searched until it has been` — asserts the `look-random` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 04f5cffd7b5a729e.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 86ae799a360e3506.
 
 ```
 Error: expect(locator).toHaveText(expected) failed
@@ -254,7 +254,7 @@ The second patch is what keeps it compiling: with the guard widened, TypeScript 
 
 **Owning test.** `the comparison is not drawn before both halves exist` — asserts the `no-seed` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 8b453b1e7877ae0c.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 1bb189386c8cd3e6.
 
 ```
 Error: expect(locator).toHaveCount(expected) failed
@@ -281,12 +281,12 @@ PINNED TO SEED 0001, outside the four candidates, for the same reason M1 is: der
 
 **Owning test.** `a rejected guess shows the key it really built` — asserts the `guess` verdict marker.
 
-**Outcome: KILLED.** Baseline passed: true. Bundle a9b9913d0d91ce39 → 93765535c7d68085.
+**Outcome: KILLED.** Baseline passed: true. Bundle f819f1fb9f16bec8 → 0d58f9c71b42057e.
 
 ```
 Error: expect(received).toBe(expected) // Object.is equality
 Expected: "f85627cc699a1c8e74aea2a54a54b08ee223d4ce283c9c7717032276569c99fe"
-Received: "01f2db2416255e79db67d5ac807e55459ed8754f07586864948aea00f6f81763"
+Received: "283b7d110722a9faeac0b05c93866c91dd3dc9ac48eb1778cf1a9bf1258a7ae4"
 991 |     // recomputed here with OpenSSL rather than with this lab's own modules.
 992 |     const cipherKey = createHash('sha256').update(missed as string, 'utf8').digest();
 > 993 |     expect(opensslKeystream(cipherKey, 0, Buffer.alloc(12), 32).toString('hex')).toBe(built);
