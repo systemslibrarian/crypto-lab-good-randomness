@@ -1,0 +1,142 @@
+{
+  "$comment": [
+    "Mutations as CONCRETE PATCHES, per §4.1c of the catalog's audits/_MASTER-TEMPLATE.md.",
+    "",
+    "A sentence describing a mutation cannot be replayed, and a paragraph describing a",
+    "run is the author's side of the claim rather than the run's. So each entry below is",
+    "a list of patches, and each patch names a file, an anchor that must occur EXACTLY",
+    "ONCE in it, and the text that replaces it. `npm run mutations` applies them one",
+    "mutation at a time and writes LEDGER.json and LEDGER.md itself; no `observed` value",
+    "in either file is typed by a person.",
+    "",
+    "SIX ENTRIES. The first four are the ones the build brief names by behaviour -- a",
+    "recovery panel that claims success without decrypting, one that claims failure",
+    "after a real decryption, a look-random check hard-wired to pass, and the seeded",
+    "generator quietly swapped for the CSPRNG so the attack could never work. The last",
+    "two are what §4.1d requires of any negative claim: delete the claim text and the",
+    "assertion that it is on screen must fail; break a check inside the fixture and the",
+    "assertion that everything is green must fail.",
+    "",
+    "EVERY PATCH IS CHOSEN TO COMPILE. A patch that does not build is recorded as DOES",
+    "NOT BUILD and is never a kill, because the suite would then run against the last",
+    "good bundle and pass having proved nothing. Two of them carry a `void` of a value",
+    "they no longer use for exactly that reason: `noUnusedLocals` would otherwise turn a",
+    "mutation into a build failure.",
+    "",
+    "EVERY PATCH IS ALSO CHOSEN TO BE DETERMINISTIC, which took more care here than in",
+    "most labs. The PIN behind Source B is drawn at mount from one of four candidates, so",
+    "a mutation that happened to name a candidate would coincide with the real PIN one",
+    "run in four and be recorded as SURVIVED. M1 is pinned to a seed OUTSIDE that set for",
+    "that reason, and M6 moves a threshold past the end of its own range rather than",
+    "narrowing it."
+  ],
+  "mutations": [
+    {
+      "id": "M1-recovery-claims-success-without-decrypting",
+      "verdict": "recovered",
+      "what": "`searchPins` stops at a fixed candidate and reports it as the hit, without consulting the decryption at all.",
+      "why": "The first of the four the brief names. Note what does NOT break: the search still runs, the panel still renders, the progress bar still reaches ten thousand, and the verdict still reads as a recovery. Only the answer is unchecked. The owning test is the one that rebuilds the key with OpenSSL's ChaCha20 and opens the message with OpenSSL's AES-256-GCM, so it fails on the authentication tag rather than on a string -- which is the point of having an independent route at all.\n\nPINNED TO SEED 0001, which is deliberate and is the difference between a deterministic mutation and a flaky one. Reporting candidate ZERO as the hit would name '0000', which is one of the four PINs the page can actually have used, so one run in four would produce a CORRECT answer and the mutation would be recorded as SURVIVED. 0001 is never a candidate.",
+      "patches": [
+        {
+          "file": "src/crypto/recover.ts",
+          "anchor": "    if (plaintext !== null && found === null) {\n      found = { seed, keyBytes, plaintext, onTry: tried };\n      if (stopAtFirstHit) break;\n    }",
+          "replacement": "    /* MUTATION M1: a fixed candidate is reported as the hit, decrypted or not. */\n    if (n === 1 && found === null) {\n      found = { seed, keyBytes, plaintext: plaintext ?? '', onTry: tried };\n      if (stopAtFirstHit) break;\n    }"
+        }
+      ],
+      "owningTest": "the recovered key is real: rebuilt and the message opened by OpenSSL",
+      "marker": "recovered",
+      "project": "claims",
+      "expectOnPage": "PASSED EVERY CHECK — AND FULLY RECOVERED, naming the PIN 0001 and an empty message, over a key that opens nothing."
+    },
+    {
+      "id": "M2-recovery-claims-failure-after-a-real-decryption",
+      "verdict": "recovered",
+      "what": "The search finds the seed and opens the message, and the panel then discards the result and renders the did-not-find verdict.",
+      "why": "The second of the four, and the exact opposite of M1: the cryptography is untouched and the REPORTING is wrong in the other direction. It is worth having both because a test that only checked 'the page said it found something' would catch one and not the other, and a page that under-claims is a page nobody can trust either.\n\nThe page's own did-not-find branch exists for a build that is broken, and it says so in the `fail` tone rather than reading like a result -- so this mutation makes the page tell the truth about itself while telling a lie about the search. That is the most benign-looking shape this defect has.",
+      "patches": [
+        {
+          "file": "src/ui/panel3.ts",
+          "anchor": "      const found = outcome.found;\n      if (!found) {",
+          "replacement": "      /* MUTATION M2: the hit is thrown away after a real decryption. */\n      const found = null as typeof outcome.found;\n      if (!found) {"
+        }
+      ],
+      "owningTest": "the recovered key is real: rebuilt and the message opened by OpenSSL",
+      "marker": "recovered",
+      "project": "claims",
+      "expectOnPage": "THE SEARCH FOUND NOTHING, in the `fail` tone, after a search that really did find it."
+    },
+    {
+      "id": "M3-look-random-check-hardwired-to-pass",
+      "verdict": "visible-pattern",
+      "what": "The 'not just counting' check reports PASS whatever it measured.",
+      "why": "The third of the four, and the subtlest to catch. Every count on the obviously-bad-generator panel is computed FROM THE ROWS, so under this mutation the headline, the pass count and the fail count all move together and stay perfectly consistent: 'CAUGHT — 1 OF 4 CHECKS FAILED' over one failing row is as internally coherent as the real thing. That is precisely the 'a page can be consistently wrong' failure §4.1b warns about, and it is why the owning test carries an INDEPENDENT RE-DERIVATION beside its cross-checks -- a counter's step is 1 and 32 bytes have 31 gaps, so the test knows what the page should have measured without asking the page.\n\nThe row still prints its real measurement, which is what makes this a good mutation rather than an obvious one: the page reports PASS next to the words 'every one of the 31 steps is exactly 1'.",
+      "patches": [
+        {
+          "file": "src/crypto/looksRandom.ts",
+          "anchor": "      passed: !steps.constant,",
+          "replacement": "      /* MUTATION M3: this check now reports PASS whatever it measured. */\n      passed: true || !steps.constant,"
+        }
+      ],
+      "owningTest": "the obviously bad generator is caught, and the page counts what it still passed",
+      "marker": "visible-pattern",
+      "project": "claims",
+      "expectOnPage": "CAUGHT — 1 OF 4 CHECKS FAILED, with the counting row reading PASS beside the measurement that should have failed it."
+    },
+    {
+      "id": "M4-seeded-generator-swapped-for-the-csprng",
+      "verdict": "recovered",
+      "what": "`seededBytes` computes the keystream and then returns bytes from `crypto.getRandomValues` instead.",
+      "why": "The fourth of the four, and the one the brief describes as making the attack impossible. It is the mutation a careless 'fix' really produces: somebody made the seeded generator unpredictable, which sounds like an improvement and destroys the lab.\n\nIt is loud in two places at once, and that redundancy is deliberate. Step 3's search exhausts all ten thousand candidates and finds nothing, which is what the owning test names. Step 1 also breaks — two rolls from the same recipe stop matching, and the page paints THE DICE CHANGED in the alarm tone, because that verdict is computed rather than asserted. A mutation that two independent verdicts notice is a mutation the page could not ship quietly.\n\nThe patch keeps `keystream` and `ZERO_NONCE` used, through a `void`, because `noUnusedLocals` would otherwise make this DOES NOT BUILD — and a mutation that fails to compile proves nothing at all.",
+      "patches": [
+        {
+          "file": "src/crypto/seeded.ts",
+          "anchor": "import { KEY_BYTES } from './real';",
+          "replacement": "import { KEY_BYTES, realBytes } from './real';"
+        },
+        {
+          "file": "src/crypto/seeded.ts",
+          "anchor": "  const cipherKey = await seedToCipherKey(seed);\n  return keystream(cipherKey, ZERO_NONCE, length);",
+          "replacement": "  /* MUTATION M4: the real source, handed back where the seeded stream belongs. */\n  const cipherKey = await seedToCipherKey(seed);\n  void keystream(cipherKey, ZERO_NONCE, length);\n  return realBytes(length);"
+        }
+      ],
+      "owningTest": "the recovered key is real: rebuilt and the message opened by OpenSSL",
+      "marker": "recovered",
+      "project": "claims",
+      "expectOnPage": "THE SEARCH FOUND NOTHING, in the `fail` tone — and, in Step 1, THE DICE CHANGED."
+    },
+    {
+      "id": "M5-negative-claim-text-deleted",
+      "verdict": "recovered",
+      "what": "The negative-claim sentence is emptied, so the fixture renders with no statement of the limitation it exists to demonstrate.",
+      "why": "§4.1d requires exactly this check: delete the negative-claim text and the assertion that it is on screen must fail. Note what does NOT break — the fixture still reaches its state, every check is still green, the key is still recovered, and the verdict still reads PASSED EVERY CHECK — AND FULLY RECOVERED. Nothing but the claim assertion can catch it. A negative-claim test that survives its own text being deleted is decorative.",
+      "patches": [
+        {
+          "file": "src/ui/panel3.ts",
+          "anchor": "export const NEGATIVE_CLAIM =\n  'Passing those four checks establishes nothing about whether a generator can be ' +\n  'predicted. ChaCha20’s output looks like this whether its key came from the ' +\n  'operating system or from a four-digit PIN, and this page has just rebuilt one of the ' +\n  'two from a number a stranger can count to.';",
+          "replacement": "export const NEGATIVE_CLAIM = '';"
+        }
+      ],
+      "owningTest": "every check passes, and the key is recovered anyway",
+      "marker": "recovered",
+      "project": "claims",
+      "expectOnPage": "The fixture exactly as it ships, minus the one sentence that makes it a result rather than a curiosity."
+    },
+    {
+      "id": "M6-fixture-check-broken",
+      "verdict": "recovered",
+      "what": "The 'not lopsided' check's lower bound is moved past the end of its own range, so it reports FAIL for every possible output.",
+      "why": "The other half of what §4.1d requires: break a check inside the fixture and the assertion that everything is green must fail. The fixture's whole force is that the page's own checks are UNANIMOUS in the state where the key has just been handed over; a fixture with a failing check in it would be demonstrating the mechanism working rather than its limit, and must never be allowed to read as a demonstration of the limitation.\n\nThe bound is moved to 33 rather than narrowed, and that is the deterministic choice: narrowing it to a plausible-looking window would still be PASSED by a draw that happened to land inside, and the mutation would be recorded as SURVIVED on some fraction of runs. Thirty-two bytes cannot have 33 in the top half of the range, so this fails every time.",
+      "patches": [
+        {
+          "file": "src/crypto/looksRandom.ts",
+          "anchor": "export const LOPSIDED_LOW = 4;",
+          "replacement": "/* MUTATION M6: no 32-byte output can clear this, so the check always fails. */\nexport const LOPSIDED_LOW = 33;"
+        }
+      ],
+      "owningTest": "every check passes, and the key is recovered anyway",
+      "marker": "recovered",
+      "project": "claims",
+      "expectOnPage": "The fixture reached, the key recovered — and both key columns reading 3 of 4 checks passed, with the lopsided row in alarm."
+    }
+  ]
+}

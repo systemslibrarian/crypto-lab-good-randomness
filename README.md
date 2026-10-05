@@ -271,7 +271,10 @@ test that survives both is decorative.
 The ledger is **enforced, not archived**. Each claims test records the (test, marker) pair it
 actually asserted, and an `afterAll` in that spec fails any full claims run in which a recorded
 kill's own test ran without asserting the marker the record names — so a kill can only stay
-recorded while the assertion that produced it still exists.
+recorded while the assertion that produced it still exists. That enforcement was itself proved by
+corrupting one record's marker and re-running: the suite failed naming
+`M3-look-random-check-hardwired-to-pass` **while all 31 tests passed**, which is the right
+subject for a false record. Restored, the suite is green again.
 
 ## Performance
 

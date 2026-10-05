@@ -420,11 +420,23 @@ test.describe('Step 2: two keys, and the panel that must not give the game away'
     );
     await expect(verdict).toContainText(`still PASSED ${passing} of the ${total}`);
 
-    // The row that caught it says which pattern it saw, which is the whole reason the
-    // rows print their measurement.
-    await expect(
-      page.locator('#p2-broken-out .check-row-bad .check-row-observed').first()
-    ).toContainText(/step/);
+    // THE COUNTING CHECK SPECIFICALLY MUST CATCH A COUNTER, and this is an
+    // INDEPENDENT RE-DERIVATION rather than a cross-check: a counter's step is 1 and
+    // there are 31 gaps between 32 bytes, so the test knows what the page should have
+    // measured without asking the page.
+    //
+    // It is here because the three count assertions above are not enough on their
+    // own. They are all computed from the same rows, so a check hard-wired to pass
+    // moves the rows and every number with them and they stay perfectly consistent —
+    // which is exactly the "a page can be consistently wrong" failure §4.1b warns
+    // about. This one names the check that must fail and what it must say.
+    const counting = page.locator('#p2-broken-out .check-row', {
+      has: page.locator('[data-check="counting"]'),
+    });
+    await expect(counting).toHaveClass(/check-row-bad/);
+    await expect(counting.locator('.check-row-observed')).toHaveText(
+      'every one of the 31 steps is exactly 1'
+    );
 
     // And the honest consequence is stated: a check passing has never meant much.
     await expect(verdict).toContainText('A check passing has never meant very much');
