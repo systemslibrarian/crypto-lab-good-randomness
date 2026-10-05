@@ -1,0 +1,1073 @@
+/* Good Randomness — theme + component styles.
+   Dark is the only theme; it lives on bare :root. There is no light palette and
+   no toggle (§3.2). The always-dark shared top bar owns its own styles, so every
+   base element rule here is scoped to #app and cannot fight it. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1b2230;
+  --border: #2b3440;
+  /* A control's boundary is judged against the surface OUTSIDE it and needs
+     3:1 (WCAG 1.4.11), which --border at about 1.4:1 does not reach. Decorative
+     dividers use --border; anything a reader can operate uses this.
+
+     NOT #626d7a, WHICH IS THE FLEET'S VALUE AND IS TOO DARK FOR THIS PAGE. It
+     measures 3.03:1 against --surface-2 -- a margin of three hundredths -- and
+     this lab is the first in the fleet to put an operable control on a TINTED
+     surface: the copy button inside each `.key-col`, whose background becomes
+     `color-mix(alarm 10%, surface-2)` or `color-mix(ok 9%, surface-2)` once Step 3
+     has marked the columns. The gate measured the copy button's edge at 2.62:1 and
+     2.57:1 there and named it. #727e8c clears 3.27:1 against the worse of those
+     two composited backdrops and 3.85:1 against the plain surface, so the token
+     has room for a tint rather than sitting on the limit. */
+  --control-border: #727e8c;
+  --text: #e6edf3;
+  --text-dim: #b3bdc8; /* muted via lower lightness, never opacity */
+
+  /* PLACEHOLDER PENDING CENTRAL ASSIGNMENT. The catalog pins each lab's accent
+     and the build brief defers it ("--accent: [central assignment]"), so this is
+     the documented fleet fallback rather than a choice made here. The shared top
+     bar reads it. See README "Pending central assignment". */
+  --accent: #35d6bb;
+  --accent-ink: #04201b; /* text on an accent fill */
+  --accent-text: #6ee3cd; /* accent as text / links / borders on the page bg */
+
+  /* The five tones. `neutral` is the one this lab needed and a generic palette
+     does not have: a verdict that establishes NOTHING. The build brief requires
+     it by name -- "no colour until panel 3 resolves which was which" -- so it is
+     deliberately the surface colour with a plain boundary, and the state is
+     carried entirely by the glyph and the words. */
+  --ok: #4ac26b;
+  --ok-text: #7ee29a;
+  --held: #6f9fd8;
+  --held-text: #9cc2ea;
+  --alarm: #e8a13c;
+  --alarm-text: #f4bd6a;
+  --bad: #f85149;
+  --bad-text: #ff8b84;
+
+  --radius: 10px;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  background-color: var(--bg); /* longhand — axe/WebKit miss the shorthand */
+  /* The top bar is `position: sticky`, so an in-page jump (#panel-2 from Step 3's
+     hand-off, #recap from Step 3's next-step link) lands its target UNDER the bar
+     and the heading a reader was sent to read is the one thing hidden. Reserving
+     the bar's height plus a little air fixes every anchor on the page at once. */
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+}
+
+#app {
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 0 clamp(0.9rem, 3vw, 2rem) 3rem;
+}
+
+#app a {
+  color: var(--accent-text);
+  text-decoration: underline; /* persistent underline, not colour alone */
+  text-underline-offset: 2px;
+}
+#app code {
+  font-family: var(--mono);
+}
+#app :is(button, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* ---------- hero (this lab owns it; fleet-consistent by review) ---------- */
+.cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
+.cl-hero-main{flex:1 1 22rem;min-width:min(100%,18rem);}
+.cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;}
+.cl-hero-sub{margin:.4rem 0 0;font-size:clamp(.9rem,1.6vw,1.05rem);letter-spacing:.01em;color:var(--text-dim);}
+.cl-hero-desc{margin:.55rem 0 0;font-size:1rem;line-height:1.5;color:var(--text-dim);max-width:60ch;}
+.cl-hero-why{flex:0 1 min(40%,26rem);min-width:min(100%,15rem);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.05rem;background:color-mix(in oklab,var(--accent) 6%,var(--bg));}
+.cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;color:var(--accent-text);}
+.cl-hero-why-text{margin:.35rem 0 0;font-size:.95rem;line-height:1.5;}
+@media (max-width:640px){.cl-hero{flex-direction:column;}.cl-hero-why{flex-basis:auto;width:100%;}}
+/* Reflow fix for the standard hero, carried from the fleet with its measurement
+   (WCAG 1.4.10). The mobile rule above gives `.cl-hero-why` `width: 100%` while
+   the fleet stylesheet leaves it `content-box`, so its own 1.05rem of side
+   padding and 1px of border are ADDED to that 100% -- 361 + 33.6 + 2 = 397px
+   inside a 390px viewport. The column flex line then grows to the widest item,
+   which drags `.cl-hero-main` with it, and the gate names hero-main while the
+   cause is hero-why.
+
+   `min-width: 0` on the mobile hero-main is the second half of the same fix. It
+   is not load-bearing at this lab's 18rem and is kept because the fleet value is
+   20rem, which does not fit at 320px -- so a future re-template from another lab
+   cannot reintroduce it. */
+.cl-hero-why{box-sizing:border-box;}
+@media (max-width:640px){.cl-hero-main{min-width:0;flex-basis:auto;}}
+
+/* ---------- the plain-language on-ramp ---------- */
+.intro {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  padding: 1rem clamp(0.9rem, 2.5vw, 1.4rem);
+  margin: 0 0 2rem;
+}
+.intro h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.01em;
+}
+.intro p {
+  margin: 0 0 0.75rem;
+  max-width: 68ch;
+}
+.intro p:last-child {
+  margin-bottom: 0;
+}
+.intro-lead {
+  font-size: 1.02rem;
+}
+.intro-safety {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+/* The on-ramp is deliberately short, so the first button is on the first screen
+   at 320px as well as at 1280. The depth did not go away; it moved in here. */
+.intro-more {
+  margin: 0.9rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+  padding: 0.5rem 0.8rem;
+}
+.intro-more > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.93rem;
+  padding: 0.2rem 0;
+}
+.intro-more-body p {
+  font-size: 0.93rem;
+  color: var(--text-dim);
+  margin: 0.5rem 0 0;
+}
+
+/* An environment with no WebCrypto. Without this the steps simply throw on click
+   and the page reads as broken rather than unavailable. */
+.unavailable {
+  margin: 0 0 1.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--bad) 50%, var(--border));
+  border-left: 3px solid var(--bad);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: color-mix(in oklab, var(--bad) 12%, var(--surface));
+  max-width: 68ch;
+}
+
+/* ---------- the three steps ---------- */
+.step {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  padding: 1.1rem clamp(0.9rem, 2.5vw, 1.4rem);
+  margin: 0 0 1.5rem;
+}
+.step h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.step-n {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  background-color: var(--accent);
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+}
+.step-plain .step-n {
+  display: none;
+}
+.step-lede,
+.sub-lede {
+  margin: 0 0 0.9rem;
+  color: var(--text-dim);
+  max-width: 68ch;
+}
+.sub-head {
+  margin: 1.6rem 0 0.4rem;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  border-top: 1px solid var(--border);
+  padding-top: 1.1rem;
+}
+.sub-head-tight {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 1.2rem;
+}
+
+/* A step that cannot do anything yet says so, and dims nothing: dimming by
+   opacity would drag its text under 4.5:1. The disabled controls inside it are
+   inactive components and exempt, the words are not. */
+.gate-note {
+  margin: 0 0 0.9rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px dashed var(--control-border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+/* ---------- controls ---------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+.controls-stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+.btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--control-border);
+  background-color: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  min-height: 2.6rem;
+}
+.btn:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--accent) 16%, var(--surface-2));
+  border-color: var(--accent-text);
+}
+.btn-primary {
+  background-color: var(--accent);
+  color: var(--accent-ink);
+  /* The border is drawn in the page ink rather than in the fill's own colour: a
+     border the same colour as the fill it surrounds is not a boundary, and
+     measures about 2.4:1 against the card behind it. */
+  border-color: var(--accent-ink);
+  font-weight: 700;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--accent) 84%, #ffffff);
+  border-color: var(--accent-ink);
+}
+.btn-quiet {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.75rem;
+  min-height: 2.2rem;
+}
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5; /* an inactive component — exempt from 1.4.3 and 1.4.11 */
+}
+
+.field {
+  display: block;
+}
+.field-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.3rem;
+}
+textarea {
+  font: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--control-border);
+  background-color: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+.limit-note {
+  margin: 0.5rem 0 0.2rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  max-width: 66ch;
+}
+
+/* ---------- the PIN choices ---------- */
+.pin-fieldset {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.8rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+}
+.pin-fieldset > legend {
+  padding: 0 0.3rem;
+  margin-bottom: 0;
+}
+.pin-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pin-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background-color: var(--bg);
+  cursor: pointer;
+  /* WCAG 2.5.8: the whole label is the target, not just the radio dot. */
+  min-height: 2.4rem;
+}
+.pin-choice:hover {
+  border-color: var(--accent-text);
+}
+/* The native radio keeps its own appearance so it keeps its own focus ring and
+   its own high-contrast rendering; only the surround is styled. */
+.pin-choice input {
+  accent-color: var(--accent);
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+}
+.pin-choice-label {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.pin-choice:has(input:checked) {
+  border-color: var(--accent-text);
+  background-color: color-mix(in oklab, var(--accent) 14%, var(--bg));
+}
+
+/* ---------- verdicts ---------- */
+.out:empty {
+  display: none;
+}
+.out {
+  margin-top: 1rem;
+}
+.verdict {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 0 0 0.9rem;
+}
+.verdict-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-family: var(--mono);
+  font-size: 0.92rem;
+}
+.verdict-headline {
+  /* A long headline must wrap rather than widen the card at 320px. */
+  overflow-wrap: anywhere;
+}
+.verdict-detail {
+  margin: 0.45rem 0 0;
+  max-width: 66ch;
+}
+.glyph {
+  flex: 0 0 auto;
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.verdict-pass {
+  background-color: color-mix(in oklab, var(--ok) 12%, var(--surface));
+  border-color: color-mix(in oklab, var(--ok) 45%, var(--border));
+  border-left-color: var(--ok);
+}
+.verdict-pass .verdict-head {
+  color: var(--ok-text);
+}
+.verdict-held {
+  background-color: color-mix(in oklab, var(--held) 13%, var(--surface));
+  border-color: color-mix(in oklab, var(--held) 45%, var(--border));
+  border-left-color: var(--held);
+}
+.verdict-held .verdict-head {
+  color: var(--held-text);
+}
+.verdict-alarm {
+  background-color: color-mix(in oklab, var(--alarm) 14%, var(--surface));
+  border-color: color-mix(in oklab, var(--alarm) 50%, var(--border));
+  border-left-color: var(--alarm);
+}
+.verdict-alarm .verdict-head {
+  color: var(--alarm-text);
+}
+.verdict-fail {
+  background-color: color-mix(in oklab, var(--bad) 12%, var(--surface));
+  border-color: color-mix(in oklab, var(--bad) 45%, var(--border));
+  border-left-color: var(--bad);
+}
+.verdict-fail .verdict-head {
+  color: var(--bad-text);
+}
+/* NEUTRAL IS THE ABSENCE OF A TONE, AND THAT IS THE DESIGN. The build brief
+   forbids colouring Panel 2 before Panel 3 resolves it, so this verdict is the
+   plain surface with a plain boundary -- no hue anywhere in it. Everything the
+   state carries is carried by the question-mark glyph and the headline, which is
+   also what makes it survive greyscale and a screen reader unchanged (1.4.1).
+   The left edge uses --control-border rather than --border because it is the one
+   part of the card that has to read as a deliberate edge rather than a divider. */
+.verdict-neutral {
+  background-color: var(--surface-2);
+  border-color: var(--control-border);
+  border-left-color: var(--control-border);
+}
+.verdict-neutral .verdict-head {
+  color: var(--text);
+}
+.verdict-retired {
+  background-color: var(--surface-2);
+  border-color: var(--control-border);
+  border-left-color: var(--control-border);
+}
+.verdict-retired .verdict-head {
+  color: var(--text-dim);
+}
+
+/* ---------- dice ---------- */
+.dice-row {
+  margin: 0.9rem 0 0;
+}
+.dice-row-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.35rem;
+}
+.dice {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.die {
+  position: relative;
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  background-color: var(--bg);
+  display: grid;
+  place-items: center;
+}
+/* The NUMBER is the content; the pips are the decoration over it. A reader using
+   a screen reader hears "4"; a reader looking at the page counts four dots. The
+   number is kept visible rather than hidden because at 320px the pips are small,
+   and a die nobody can read is worse than a die that shows its number. */
+.die-number {
+  position: absolute;
+  bottom: 0.05rem;
+  right: 0.25rem;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.6rem;
+  letter-spacing: 0;
+  color: var(--text-dim);
+}
+.die-pips {
+  display: grid;
+  grid-template-columns: repeat(3, 0.34rem);
+  grid-auto-rows: 0.34rem;
+  gap: 0.18rem;
+  place-content: center;
+}
+.pip {
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 50%;
+  background-color: var(--text);
+}
+
+/* ---------- the two key columns ---------- */
+/* IDENTICAL BY CONSTRUCTION. Both columns are this one rule, which is the whole
+   visual argument of Panel 2: nothing distinguishes them until Panel 3 adds a
+   mark. Two rules kept in step by hand would make that a coincidence. */
+.key-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.8rem;
+  margin: 0.9rem 0 0;
+}
+.key-col {
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-left-color: var(--control-border);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: var(--surface-2);
+  padding: 0.75rem 0.9rem;
+  /* A grid item's automatic minimum size is the min-content width of its widest
+     child, which for a long key would be the whole key. Without this the grid
+     pushes the document sideways at 320px (WCAG 1.4.10). */
+  min-width: 0;
+}
+/* The marks Panel 3 adds. Not present until then. */
+.key-col-recovered {
+  border-left-color: var(--alarm);
+  background-color: color-mix(in oklab, var(--alarm) 10%, var(--surface-2));
+}
+.key-col-untouched {
+  border-left-color: var(--ok);
+  background-color: color-mix(in oklab, var(--ok) 9%, var(--surface-2));
+}
+.key-col-title {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+.key-col-where {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+}
+/* Icon AND text AND colour (WCAG 1.4.1): the mark says what happened in words,
+   so it survives greyscale, deuteranopia and a screen reader. */
+.key-col-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.key-col-mark-recovered {
+  color: var(--alarm-text);
+}
+.key-col-mark-untouched {
+  color: var(--ok-text);
+}
+.key-col-key {
+  margin: 0.6rem 0 0;
+}
+.key-col-key-label,
+.long-value-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.25rem;
+}
+.key-col-key-code,
+.long-value-code {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+  /* Wrapped, never scrolled. A scroll region here would need a keyboard route
+     and a label (WCAG 2.1.1); wrapping needs neither and reads at 320px. The
+     bytes are grouped in fours so there is somewhere to break that is not inside
+     a byte. */
+  overflow-wrap: anywhere;
+}
+.long-value {
+  margin: 0.7rem 0 0;
+}
+.key-col-count {
+  margin: 0.55rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* ---------- the four check rows ---------- */
+.check-rows {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.check-row {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 0 8px 8px 0;
+  background-color: var(--bg);
+  font-size: 0.86rem;
+  min-width: 0;
+}
+.check-row-ok {
+  border-left-color: var(--ok);
+}
+.check-row-bad {
+  border-left-color: var(--bad);
+  background-color: color-mix(in oklab, var(--bad) 10%, var(--bg));
+}
+.check-row-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.check-row-head .glyph {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+.check-row-state {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+.check-row-ok .check-row-state {
+  color: var(--ok-text);
+}
+.check-row-bad .check-row-state {
+  color: var(--bad-text);
+}
+.check-row-name {
+  font-weight: 600;
+}
+.check-row-question {
+  color: var(--text-dim);
+}
+.check-row-observed {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- the live counter ---------- */
+.progress-wrap {
+  margin: 0.9rem 0 0;
+}
+.progress {
+  display: block;
+}
+.progress-count {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+.progress-bar {
+  display: block;
+  height: 0.6rem;
+  border: 1px solid var(--control-border);
+  border-radius: 999px;
+  background-color: var(--bg);
+  overflow: hidden;
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  background-color: var(--accent);
+}
+
+/* ---------- notes that carry a claim, and asides that do not ---------- */
+.claim-note {
+  margin: 0.8rem 0 0;
+  padding: 0.6rem 0.8rem;
+  border-left: 3px solid var(--accent);
+  background-color: var(--surface-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  max-width: 66ch;
+}
+.aside-note {
+  margin: 0.7rem 0 0;
+  font-size: 0.92rem;
+  color: var(--text-dim);
+  max-width: 68ch;
+}
+.negative-claim {
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in oklab, var(--alarm) 50%, var(--border));
+  border-left: 3px solid var(--alarm);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: color-mix(in oklab, var(--alarm) 10%, var(--surface));
+  font-weight: 600;
+  max-width: 66ch;
+}
+.handoff {
+  margin: 0.8rem 0 0;
+}
+
+/* ---------- what came back ---------- */
+.recovered-wrap {
+  margin: 0;
+}
+.recovered {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--alarm);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: var(--bg);
+}
+.recovered-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.recovered-text {
+  margin: 0.3rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.bytes-details {
+  margin: 1rem 0 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+  padding: 0.5rem 0.8rem;
+}
+.bytes-details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 0.2rem 0;
+}
+.bytes-body {
+  padding: 0.3rem 0 0.5rem;
+}
+.bytes-lede {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  max-width: 66ch;
+}
+
+/* ---------- two things, side by side ---------- */
+.compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.7rem;
+  margin: 0.9rem 0 0;
+}
+.compare-col {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--bg);
+  padding: 0.55rem 0.7rem;
+  min-width: 0;
+}
+
+/* ---------- predictions, questions and their answers ---------- */
+.learner-check {
+  margin: 0 0 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+  padding: 0.5rem 0.8rem;
+}
+.learner-check > summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.2rem 0;
+}
+.check-body {
+  padding: 0.4rem 0 0.6rem;
+}
+.check-q {
+  margin: 0.3rem 0 0.7rem;
+  max-width: 66ch;
+}
+.check-opts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+.check-opt {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--control-border);
+  background-color: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  min-height: 2.5rem;
+}
+.check-opt:hover {
+  border-color: var(--accent-text);
+  background-color: color-mix(in oklab, var(--accent) 12%, var(--bg));
+}
+.check-result {
+  margin: 0.8rem 0 0;
+  max-width: 66ch;
+}
+.check-result:empty {
+  display: none;
+}
+.pill-ok,
+.pill-bad {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+}
+.pill-ok {
+  background-color: color-mix(in oklab, var(--ok) 12%, var(--surface));
+  border-left-color: var(--ok);
+}
+.pill-bad {
+  background-color: color-mix(in oklab, var(--alarm) 12%, var(--surface));
+  border-left-color: var(--alarm);
+}
+.pill-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+.pill-ok .pill-head {
+  color: var(--ok-text);
+}
+.pill-bad .pill-head {
+  color: var(--alarm-text);
+}
+.pill-why {
+  display: block;
+  margin-top: 0.4rem;
+}
+.which-wrap {
+  margin: 1.2rem 0 0;
+}
+.scenario {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+}
+.scenario:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- the pinned cases ---------- */
+.source-line {
+  margin: 0.8rem 0 0;
+  font-size: 0.92rem;
+  color: var(--text-dim);
+  max-width: 68ch;
+  /* The RFC's own section marks and a URL are both unbreakable tokens; wrapping
+     anywhere keeps this paragraph inside 320px (WCAG 1.4.10). */
+  overflow-wrap: anywhere;
+}
+.case-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.case {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  gap: 0.2rem 0.7rem;
+  align-items: baseline;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: var(--surface-2);
+  font-size: 0.88rem;
+  min-width: 0;
+}
+.case-ok {
+  border-left-color: var(--ok);
+}
+.case-bad {
+  border-left-color: var(--bad);
+  background-color: color-mix(in oklab, var(--bad) 12%, var(--surface));
+}
+.case-id {
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.case-kind,
+.case-where {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.case-why {
+  grid-column: 1 / -1;
+  color: var(--text-dim);
+}
+.case-got {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+.case-ok .case-got {
+  color: var(--ok-text);
+}
+.case-bad .case-got {
+  color: var(--bad-text);
+  font-weight: 700;
+}
+@media (max-width: 560px) {
+  .case {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- the recap table ---------- */
+/* A table is the one shape here that may scroll sideways, so it gets the
+   keyboard route and the label WCAG 2.1.1 requires -- declared in the markup,
+   because a scroller born without them is invisible to axe. */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.recap-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.93rem;
+}
+.recap-table :is(th, td) {
+  text-align: left;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.recap-table thead th {
+  background-color: var(--surface-2);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.recap-table tbody th {
+  font-weight: 700;
+}
+
+/* ---------- next step ---------- */
+.next-step {
+  margin: 1rem 0 0;
+}
+.next-step-link {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background-color: var(--surface-2);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+#app .next-step-link {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.next-step-link:hover {
+  border-color: var(--accent-text);
+  background-color: color-mix(in oklab, var(--accent) 12%, var(--surface-2));
+}
+
+/* ---------- footer ---------- */
+.scripture-footer {
+  margin-top: 2.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.scripture-footer p {
+  margin: 0 0 0.6rem;
+  max-width: 70ch;
+}
+.footer-next {
+  font-weight: 600;
+  color: var(--text);
+}
+ul.footer-links {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+  overflow-wrap: anywhere;
+}
+
+/* Visually hidden, still announced. Used for the table caption. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- reduced motion ---------- */
+/* There is no decorative motion in this lab to cancel: nothing idles, nothing
+   loops, and no element's only route to its visible state is an animation. What
+   is left is the transitions on hover and on the skip link, and the progress
+   bar's width, which is a live measurement rather than an animation and so is
+   unaffected by any of this. The gate asserts, from inside the page, that this
+   block is in effect -- and that nothing ends up invisible once it is (see
+   `expectNotBlank` in e2e/gate.ts). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

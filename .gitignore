@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+*.local
+playwright-report
+test-results
+chat.md
+# The build standard, kept on disk and out of the repo: a committed snapshot of
+# the catalog's audits/_MASTER-TEMPLATE.md ages silently into a second, wrong
+# copy of a file the catalog owns.
+CRYPTO-LAB-TEMPLATE.md

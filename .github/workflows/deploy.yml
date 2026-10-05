@@ -1,0 +1,173 @@
+name: Deploy to GitHub Pages
+
+# ONE workflow, with ONE `build` job that both `deploy` and
+# `dependabot-auto-merge` declare in `needs:`. That shape is the whole point
+# rather than a convenience: when auto-merge hangs off a lighter CI workflow than
+# the deploy runs, a bump only has to satisfy the lighter of the two to merge
+# itself, the heavier one fails afterwards on the merge commit where no pull
+# request is watching, and `main` silently stops shipping with nothing red in
+# between. crypto-lab-e91 drifted exactly that way and was found serving a stale
+# build; nineteen labs had the same shape. See §6.1-6.2 of the catalog's
+# audits/_MASTER-TEMPLATE.md, which `gate-sync.js check` enforces.
+
+on:
+  push:
+    branches: [main]
+  pull_request: # the gate must judge pull requests too -- see §6.1
+    branches: [main]
+  workflow_dispatch: # so a deploy can be re-run by hand -- see §6.2
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  # NOT a bare `pages`: this workflow also runs on pull_request, and with
+  # cancel-in-progress a PR run would cancel a live main deploy.
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # GitHub's default is 360 minutes, which is where a hung run's six silent
+    # hours come from. The a11y drive measures ~70 seconds locally across its
+    # three widths, and the claims suite ~12 -- so 30 leaves real headroom on a
+    # slower runner while still failing loudly rather than stalling for hours.
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # FIRST, because it needs nothing built and it answers a question every
+      # other step would otherwise answer wrongly. The pinned ChaCha20 vectors in
+      # src/crypto/vectors.json were transcribed BY HAND from RFC 8439, and one of
+      # them was wrong in its last twenty bytes when this lab was written. This
+      # re-derives every value with Node's OpenSSL ChaCha20 -- an implementation
+      # sharing not one line with this repository -- so a unit-test failure below
+      # means the LAB is wrong, and a failure here means the DATA is. Without the
+      # split, a disagreement cannot say which side to fix.
+      - name: Pinned vectors re-derived by an independent implementation
+        run: npm run check-vectors
+
+      # The WHOLE suite gates the deploy, not just the a11y half. A 2026-08-14
+      # sweep found 29 repos whose deploy job ran `test:a11y` alone, so their
+      # correctness suites never blocked a publish -- those repos could ship a
+      # build whose cryptography was broken as long as the browser specs passed.
+      # A test step that runs ZERO tests EXITS 0, and the gate then passes with a
+      # log reading zero tests -- which is how crypto-lab-padding-oracle ended up
+      # with a hand-written harness nothing ran. So the COUNT is asserted, not
+      # just the exit status, in the same step that produces it.
+      #
+      # NO_COLOR, and the sed, are both load-bearing. Vitest colourizes in CI, so
+      # the raw log reads `Test Files <ESC>[22m <ESC>[1m<ESC>[32m3 passed` and a
+      # regex expecting `Test Files  3 passed` does not match -- this exact guard
+      # failed its first CI run that way elsewhere in the fleet, on a suite where
+      # every test had just passed. A guard that goes red when the thing it guards
+      # is fine is as bad as one that stays green when it is not, so the escape
+      # codes are removed twice over rather than assumed absent.
+      - name: Unit tests (RFC 8439 KATs, determinism, the recovery)
+        env:
+          NO_COLOR: '1'
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee /tmp/vitest.raw.log
+          sed -E 's/\x1b\[[0-9;]*[A-Za-z]//g' /tmp/vitest.raw.log > /tmp/vitest.log
+          grep -Eq 'Test Files +[1-9][0-9]* passed' /tmp/vitest.log \
+            || { echo "::error::Vitest reported no passing test FILES"; exit 1; }
+          grep -Eq 'Tests +[1-9][0-9]* passed' /tmp/vitest.log \
+            || { echo "::error::Vitest reported no passing TESTS"; exit 1; }
+          echo "unit suite: $(grep -Eo 'Tests +[0-9]+ passed' /tmp/vitest.log | head -1)"
+
+      - name: Build (typecheck gates the build)
+        run: npm run build
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      # Both browser suites, and both are gates. The a11y spec drives every state
+      # at 1280/390/320; the claims spec checks what the page SAYS and what it
+      # declares it does NOT promise (§4.1b, §4.1d). The claims run also enforces
+      # the mutation ledger -- see e2e/evidence.ts.
+      - name: Accessibility gate (axe-core, WCAG A/AA, at 1280 / 390 / 320)
+        run: npm run test:a11y
+
+      - name: Displayed claims and the negative claim
+        run: npm run test:claims
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    # NOT `== 'push'`. That reads as equivalent and is not: it would also skip
+    # workflow_dispatch, which is the one trigger §6.2 depends on -- the
+    # dispatched run would build, pass the gate, and skip the deploy job, so the
+    # site would still never update after an auto-merge.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+  # Dependabot only. `needs: build` is the entire safety argument -- a bump can
+  # only merge itself once this lab's whole gate went green, and that gate judges
+  # a bump far better than its version number does. A major that actually breaks
+  # the lab fails the gate and the pull request stays open for a human.
+  dependabot-auto-merge:
+    needs: build
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write # required by the deploy dispatch; without it gh workflow run 403s
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v3
+      - name: Merge any bump whose gate went green
+        # Retry: a sibling pull request merging first moves main underneath us and
+        # GitHub rejects with "Base branch was modified". That is benign, so try
+        # again rather than failing the run over a race. The exit status of
+        # `gh pr merge` is what decides -- the merge is never re-queried.
+        run: |
+          merged=""
+          for attempt in 1 2 3; do
+            if gh pr merge --squash --delete-branch "$PR_URL"; then
+              merged=1
+              break
+            fi
+            echo "merge attempt $attempt failed; base branch may have moved - retrying"
+            sleep 15
+          done
+          if [ -z "$merged" ]; then
+            echo "::warning::gate passed but the merge did not land after 3 attempts;"
+            echo "::warning::leaving this PR open - Dependabot will rebase and retry."
+            exit 0
+          fi
+          # A merge made with GITHUB_TOKEN raises no push event -- GitHub suppresses
+          # them so workflows cannot retrigger themselves -- so deploy would never run
+          # and the site would keep serving the previous build. Ask for it explicitly;
+          # a workflow_dispatch through the API is not suppressed. The dispatched run
+          # is the same gate-then-deploy pipeline, so a bad merge still ships nothing.
+          #
+          # This lab's workflow file really is deploy.yml. The fleet is not
+          # consistent about that name, and a copied name 404s ONLY on the
+          # auto-merge path and only after the merge has already landed.
+          gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            || echo "::warning::deploy dispatch failed; run deploy.yml by hand"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
