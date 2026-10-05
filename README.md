@@ -208,8 +208,8 @@ re-derives every committed value with **Node's OpenSSL ChaCha20**, an implementa
 one line with this repository. It is the first thing `npm run build` does, so every build and
 every browser suite runs it, and CI *also* runs it as its own named step before the typecheck —
 which is not redundant: as a named step it fails saying `Pinned vectors` rather than failing
-inside a step called `Build`. A failure there means
-the *data* is wrong; a failure in the unit suite means the *lab* is. That split is what caught it.
+inside a step called `Build`. A failure there means the *data* is wrong; a failure in the unit
+suite means the *lab* is, and that split is what caught the bad transcription.
 The script pins its own oracle first: OpenSSL's `chacha20` takes a 16-byte IV (a little-endian
 counter followed by the nonce) where the RFC states a separate counter word, so it checks the
 §2.3.2 case and exits with a distinct code if its own packing is wrong, rather than reporting ten
@@ -224,8 +224,8 @@ brief rules *out*: the page carries no entropy figure, no min-entropy, no test-b
 
 **The accessibility gate.** `@axe-core/playwright` scans the production build for zero WCAG 2.1
 A/AA violations at **1280, 390 and 320 px**, and the Pages deploy is blocked if it fails. The
-oracle engines in `e2e/contrast.ts` and `e2e/nontext.ts` are the ones the build standard names as
-the reference implementation, taken across code-identical — including the per-side `paintedSides`
+oracle engines in `e2e/contrast.ts` and `e2e/nontext.ts` are the reference implementation the
+build standard names, carried across code-identical — including its per-side `paintedSides`
 border measurement — with every passage that describes a page rewritten for this one.
 
 **One inherited claim was checked rather than copied, and it was false here.** The reference
