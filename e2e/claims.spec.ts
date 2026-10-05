@@ -781,12 +781,28 @@ test.describe('the negative claim: looking random establishes nothing', () => {
     // No verdict anywhere is in the `fail` tone, and nothing has been superseded.
     await expect(page.locator('[data-verdict][data-tone="fail"]')).toHaveCount(0);
     await expect(page.locator('[data-verdict-retired]')).toHaveCount(0);
-    // EVERY ONE of the eight check rows reports PASS — both columns, all four checks.
-    // This is the assertion that makes the claim a result: the page's own checks are
-    // unanimous in exactly the state where the key has just been handed over.
-    await expect(page.locator('.check-row')).toHaveCount(8);
-    await expect(page.locator('.check-row-ok')).toHaveCount(8);
-    await expect(page.locator('.check-row-bad')).toHaveCount(0);
+    // EVERY CHECK ON THE RECOVERED COLUMN REPORTS PASS. This is the assertion that
+    // makes the claim a result: the page's own checks are unanimous about Source B in
+    // exactly the state where Source B's key has just been handed over.
+    //
+    // SCOPED TO SOURCE B DELIBERATELY, and the reason matters. This used to require all
+    // EIGHT rows to pass — both columns — which quietly asserted that a draw from
+    // `crypto.getRandomValues` must always look balanced. It must not: the thresholds in
+    // `looksRandom.ts` are documented as failing a genuinely random draw about once in
+    // two hundred thousand, and the page is built to report that honestly rather than
+    // call the real source unsound. A suite that demanded the opposite would be teaching
+    // the one thing `real.test.ts` exists to refuse — and would go red, once in a very
+    // long while, on a perfectly correct build.
+    //
+    // Source B is a fixed PIN, so its four rows are a FACT rather than a probability,
+    // which is what the negative claim is actually about.
+    const seeded = page.locator('.key-col[data-col="seeded"]');
+    await expect(seeded.locator('.check-row')).toHaveCount(4);
+    await expect(seeded.locator('.check-row-ok')).toHaveCount(4);
+    await expect(seeded.locator('.check-row-bad')).toHaveCount(0);
+    // Source A's four checks are RENDERED and reported, whatever they say. What must
+    // never happen is a check row missing, which would make the comparison incomplete.
+    await expect(page.locator('.key-col[data-col="real"] .check-row')).toHaveCount(4);
     // The pinned cases still agree, so the cipher is the real one.
     await expect(page.locator('[data-verdict="pinned"]')).toHaveAttribute('data-tone', 'pass');
     // And the decryption in the fixture SUCCEEDED — the property really is violated.

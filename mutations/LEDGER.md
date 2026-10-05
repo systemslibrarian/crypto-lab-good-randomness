@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T12:05:02.875Z.
+Generated 2026-10-05T12:10:56.901Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 
@@ -177,9 +177,9 @@ The bound is moved to 33 rather than narrowed, and that is the deterministic cho
 
 ```
 Error: expect(locator).toHaveCount(expected) failed
-Locator:  locator('.check-row-ok')
-Expected: 8
-Received: 6
+Locator:  locator('.key-col[data-col="seeded"]').locator('.check-row-ok')
+Expected: 4
+Received: 3
 Timeout:  5000ms
 Call log:
 ```
@@ -287,8 +287,8 @@ PINNED TO SEED 0001, outside the four candidates, for the same reason M1 is: der
 Error: expect(received).toBe(expected) // Object.is equality
 Expected: "f85627cc699a1c8e74aea2a54a54b08ee223d4ce283c9c7717032276569c99fe"
 Received: "283b7d110722a9faeac0b05c93866c91dd3dc9ac48eb1778cf1a9bf1258a7ae4"
-991 |     // recomputed here with OpenSSL rather than with this lab's own modules.
-992 |     const cipherKey = createHash('sha256').update(missed as string, 'utf8').digest();
-> 993 |     expect(opensslKeystream(cipherKey, 0, Buffer.alloc(12), 32).toString('hex')).toBe(built);
+1007 |     // recomputed here with OpenSSL rather than with this lab's own modules.
+1008 |     const cipherKey = createHash('sha256').update(missed as string, 'utf8').digest();
+> 1009 |     expect(opensslKeystream(cipherKey, 0, Buffer.alloc(12), 32).toString('hex')).toBe(built);
 ```
 
