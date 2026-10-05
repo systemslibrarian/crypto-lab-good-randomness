@@ -3,7 +3,7 @@
 A key is only a secret because nobody can guess it. This lab draws one 32-byte key from the
 browser's own CSPRNG (**`crypto.getRandomValues`**) and another from a real **ChaCha20** stream
 started at a four-digit PIN, runs the same look-random checks over both — all four pass, on both
-— and then rebuilds the second key by counting to ten thousand.
+— and then recovers the second key by trying all 10,000 possible PINs.
 
 **Live demo:** <https://systemslibrarian.github.io/crypto-lab-good-randomness/>
 

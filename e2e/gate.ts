@@ -362,8 +362,8 @@ export async function boot(page: Page, theme: 'dark'): Promise<void> {
   const gatedCount = await gated.count();
   expect(gatedCount, 'Step 3 must declare its prerequisite in markup').toBeGreaterThan(2);
   await expect(page.locator('button[data-needs]:disabled')).toHaveCount(gatedCount);
-  await expect(page.locator('#panel-3 .gate-note')).toBeVisible();
-  await expect(page.locator('#panel-3 .gate-note')).not.toBeEmpty();
+  for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).toBeVisible();
+  for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).not.toBeEmpty();
   // Steps 1 and 2 are not gated at all: every control in them works on arrival,
   // which is what makes the first action reachable from the first screen.
   for (const id of ['roll-real', 'roll-recipe', 'make-keys', 'check-broken']) {
@@ -980,7 +980,7 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
 
   // ── Step 3: what the attacker was handed, before it runs ────────────────
   await expect(page.locator('#try-guess')).toBeEnabled();
-  await expect(page.locator('#panel-3 .gate-note')).toBeHidden();
+  for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).toBeHidden();
   await reveal(page, /Show the encrypted bytes a stranger was handed/);
   await scanAt('Step 3: the intercepted nonce and ciphertext, disclosed before the attack');
   await reveal(page, /Predict first/, 2);
@@ -1156,7 +1156,7 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   // gated state once keys exist, and the note has to be scanned beside Step 1's
   // results rather than only on an empty page.
   await page.reload();
-  await expect(page.locator('#panel-3 .gate-note')).toBeVisible();
+  for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).toBeVisible();
   await press(page, 'Roll five dice', 'dice-real', 'pass');
   await scanAt('Step 3 gated again after a reload — the gate note beside a fresh Step 1 verdict');
 }

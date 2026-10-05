@@ -551,12 +551,12 @@ test.describe('Step 3: the recovery, checked by an independent route', () => {
     // A control that looks available and silently does nothing is worse for a
     // beginner than a disabled one, so the prerequisite is declared per control and
     // the sentence beside it names the thing to go and do.
-    await expect(page.locator('#panel-3 .gate-note')).toContainText('Make the two keys in Step 2');
+    for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).toContainText('Make the two keys in Step 2');
     for (const id of ['try-guess', 'search-seeded', 'search-real']) {
       await expect(page.locator(`#${id}`)).toBeDisabled();
     }
     await makeKeys(page);
-    await expect(page.locator('#panel-3 .gate-note')).toBeHidden();
+    for (const note of await page.locator('#panel-3 .gate-note').all()) await expect(note).toBeHidden();
     for (const id of ['try-guess', 'search-seeded', 'search-real']) {
       await expect(page.locator(`#${id}`)).toBeEnabled();
     }
