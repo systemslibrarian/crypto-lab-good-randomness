@@ -7,7 +7,7 @@ The records are also enforced rather than archived: an `afterAll` in `e2e/claims
 fails any full claims run in which a kill recorded here names a test that ran WITHOUT
 asserting its marker, so a kill can only stay recorded while its assertion still exists.
 
-Generated 2026-10-05T04:41:17.189Z.
+Generated 2026-10-05T04:48:26.259Z.
 
 ## A kill is defined by four rules, and the script enforces all four
 

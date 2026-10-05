@@ -229,8 +229,8 @@ copies of `contrast.ts` say axe cannot resolve a `color-mix()` backdrop. Driven 
 carrying the most `color-mix()` surfaces on this page, `axe.incomplete` came back **empty**, and a
 degraded `--held-text` was reported by axe as a `color-contrast` *violation*. axe-core 4.12
 resolves these fills. The arithmetic walk is kept as a second independent implementation — it
-reported the same defect as `2.65:1 ... fg rgb(74, 108, 143) on rgb(32, 42, 54)`, where that
-backdrop is the composited `color-mix()` result — and the files now say so instead.
+reported the same defect over the composited `color-mix()` backdrop (the table below) — and the
+files now say so instead.
 
 The gate found one real defect, fixed in `src/style.css` with the measurement beside it. This lab
 is the first in the fleet to put an operable control on a **tinted** surface: the copy button
@@ -243,12 +243,13 @@ surface by three hundredths, 3.03:1 — that tint took it under, and the gate na
 Both oracles were then **proved live** rather than inferred from a green run, because an empty
 finding set is also what an oracle that never ran produces:
 
-| Oracle | Degradation | Build | Bundle | Reported |
+| Oracle | Degradation | Build | CSS hash | Reported |
 |---|---|---|---|---|
-| `nontext.ts` | `--control-border` → `#2b3440` | succeeded | `47263e19b4747` → `46e69ef4e24ec` | `textarea#recipe` and `button#check-broken.btn` at 1.37:1, six `button.check-opt` at 1.27:1, against a required 3:1 |
-| `contrast.ts` | `--held-text` → `#4a6c8f` | succeeded | CSS hash moved | `2.65:1 (needs 4.5:1) span.verdict-headline` over the composited backdrop |
+| `nontext.ts` | `--control-border` → `#2b3440` | succeeded | `31b978f9a07b7` → `5e58baf968454` | `textarea#recipe` and `button#check-broken.btn` at 1.37:1, six `button.check-opt` at 1.27:1, against a required 3:1 |
+| `contrast.ts` | `--held-text` → `#4a6c8f` | succeeded | `31b978f9a07b7` → `0d4d8ed5a8066` | `2.65:1 (needs 4.5:1) span.verdict-headline — fg rgb(74, 108, 143) on rgb(32, 42, 54)`, where that backdrop is the composited `color-mix()` result |
 
-Both hashes returned to `47263e19b4747` on restore.
+Both returned to `31b978f9a07b7` on restore, which is the hash `md5 dist/assets/*.css` prints on
+`main` today — so the record is checkable rather than merely recorded.
 
 **The mutation ledger — proof the tests bite.** A green suite is not evidence until you have
 watched it fail. `mutations/mutations.json` records each mutation as a **concrete patch** — a
