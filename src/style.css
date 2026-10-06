@@ -25,13 +25,14 @@
   --text: #e6edf3;
   --text-dim: #b3bdc8; /* muted via lower lightness, never opacity */
 
-  /* PLACEHOLDER PENDING CENTRAL ASSIGNMENT. The catalog pins each lab's accent
-     and the build brief defers it ("--accent: [central assignment]"), so this is
-     the fallback the build standard documents rather than a choice made here. The
-     shared top bar reads it. See README "Pending central assignment". */
-  --accent: #35d6bb;
-  --accent-ink: #04201b; /* text on an accent fill */
-  --accent-text: #6ee3cd; /* accent as text / links / borders on the page bg */
+  /* Assigned centrally from the catalog on 2026-10-06, measured so this card
+     differs from its neighbours at 1440, 1280, 1024, 760 and 420. */
+  --accent: #9f88ff;
+  /* Both derived FROM the accent above, not left at the teal they were while
+     the accent was the teal fallback. Measured on this lab's own --bg:
+     accent-text 6.70:1, and the ink 6.69:1 on an accent fill. */
+  --accent-ink: #140a2e; /* text on an accent fill */
+  --accent-text: #9f88ff; /* accent as text / links / borders on the page bg */
 
   /* The five tones. `neutral` is the one this lab needed and a generic palette
      does not have: a verdict that establishes NOTHING. The build brief requires
