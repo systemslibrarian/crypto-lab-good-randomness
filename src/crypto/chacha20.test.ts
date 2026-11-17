@@ -111,3 +111,24 @@ describe('the pinned set itself', () => {
     expect(() => block(new Uint8Array(32), 0, new Uint8Array(8))).toThrow(/12-byte nonce/);
   });
 });
+
+describe('the rationale text on the derived nonce case counts its own data', () => {
+  // The `why` on the "one nonce bit changed" case explained itself by saying
+  // how many published vectors carry an all-zero nonce, and said five. RFC 8439
+  // Appendix A.1 has five block-function vectors, four with an all-zero nonce
+  // and one with 00..02, plus §2.3.2's vector with nonce 000000090000004a00000000:
+  // four of the six, not five. Counted from the file rather than trusted.
+  const allZero = (hex: string) => /^0+$/.test(hex);
+
+  it('names the real number of all-zero published nonces', () => {
+    const published = BLOCK_CASES.filter((c) => c.where.startsWith('RFC 8439'));
+    expect(published).toHaveLength(6);
+    const zeros = published.filter((c) => allZero(c.nonceHex)).length;
+    expect(zeros).toBe(4);
+
+    const derived = MUST_DIFFER.find((c) => c.label === 'one nonce bit changed');
+    expect(derived).toBeDefined();
+    expect(derived!.why).toContain(`four of the six published vectors have an all-zero nonce`);
+    expect(derived!.why).not.toContain('five of the six');
+  });
+});

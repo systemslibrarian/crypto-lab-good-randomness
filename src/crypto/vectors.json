@@ -117,7 +117,7 @@
     {
       "label": "one nonce bit changed",
       "where": "this lab, derived from RFC 8439 §2.3.2",
-      "why": "the published case with one nonce bit flipped — this is the input a build is most likely to drop, because five of the six published vectors have an all-zero nonce",
+      "why": "the published case with one nonce bit flipped — this is the input a build is most likely to drop, because four of the six published vectors have an all-zero nonce",
       "keyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       "counter": 1,
       "nonceHex": "000000090000004a00000001",
