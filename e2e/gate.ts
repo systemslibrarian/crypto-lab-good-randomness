@@ -417,9 +417,9 @@ export async function boot(page: Page, theme: 'dark'): Promise<void> {
   // The per-question shape is asserted rather than one magic total: a total is the
   // kind of number that is wrong on the first write and tells you nothing about
   // WHICH question lost its options.
-  await expect(page.locator('#recap .scenario')).toHaveCount(4);
-  await expect(page.locator('#recap .check-result')).toHaveCount(4);
-  for (const n of [1, 2, 3, 4]) {
+  await expect(page.locator('#recap .scenario')).toHaveCount(5);
+  await expect(page.locator('#recap .check-result')).toHaveCount(5);
+  for (const n of [1, 2, 3, 4, 5]) {
     const options = page.locator(`#scenario-${n} .check-opt`);
     expect(
       await options.count(),
@@ -1088,6 +1088,11 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await page.locator('#scenario-1 .check-opt').first().click();
   await expect(page.locator('#scenario-1 .check-result')).toHaveClass(/pill-ok/);
   await scanAt('the recap table, with a closing question answered right');
+
+  // The physical-source follow-up sits after the test-battery question it extends.
+  await page.locator('#scenario-5 .check-opt').first().click();
+  await expect(page.locator('#scenario-5 .check-result')).toHaveClass(/pill-ok/);
+  await scanAt('the physical-source follow-up answered');
 
   // The fourth question is the one aimed at the wrong takeaway, and it is the last
   // thing on the page, so it is scanned where a reader meets it.

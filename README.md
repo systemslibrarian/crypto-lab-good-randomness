@@ -21,8 +21,9 @@ Cryptography API) as the real source; **SHA-256** and **AES-256-GCM** through th
 subject, and a reader has to be able to open the file and see that nothing is pretending.
 
 **The problem it addresses.** A generator that starts from a guessable seed produces guessable
-keys, and nothing about the output looks wrong. Not to the eye, not to a check of the bytes, not
-to a statistical battery. The failure is invisible in exactly the place people look for it.
+keys, and nothing about the output looks wrong. Both examples pass the four checks shown here.
+These checks describe the displayed bytes; they don't tell you how the seed was chosen. The
+PIN-seeded example is still predictable.
 
 **The security model.** Everything is per-session and in memory. No backend, no network calls, no
 storage — the only thing this page writes to `localStorage` is the theme pin. Reloading destroys
@@ -122,8 +123,10 @@ Three more things the lab is explicit about in-page:
   seed matter" by letting them take a key rather than by asserting it.
 - Use it to settle the 256-bit confusion, because the lab makes "length is not strength" a
   measurement rather than a slogan.
-- Use it to retire "but our RNG passes its statistical tests", because the output on this page
-  would pass any battery you ran at it and its key took ten thousand tries.
+- Use it to question "but our RNG passes its statistical tests", because both examples pass the
+  four checks shown here — checks that describe the displayed bytes, not how the seed was chosen —
+  and the PIN-seeded key still took ten thousand tries. The page shows that for these four checks;
+  it does not claim to have run any other test.
 - Use it before **Entropy Collapse**, which is the same failure at the scale of real machines.
 - **Do NOT use it** as a guide to building anything. The fixed nonce and the four-digit seed are
   there to make a lesson visible in one second, and a system built that way is broken.

@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 import { boot } from './gate';
 import { enforceLedger, ran, witness } from './evidence';
@@ -1227,6 +1228,51 @@ test.describe('the vocabulary this lab deliberately does not use', () => {
     // attacker cannot enumerate.
     expect(answer).toContain('more starting points');
     expect(answer).toContain('cannot\u2009enumerate'.replace('\u2009', ' '));
+  });
+
+  test('passing claims are scoped to the four checks this page ran', async ({ page }) => {
+    await boot(page, 'dark');
+    // The page runs four checks. Every sentence about passing has to say so, and
+    // separate what the checks observed (the displayed bytes) from what they cannot
+    // establish (how the seed was chosen).
+    const scoped = 'they don\u2019t tell you how the seed was chosen';
+    // The predictions ship inside disclosures that start shut; open them as a reader would.
+    for (const summary of await page.locator('details > summary').all()) await summary.click();
+
+    await page.locator('#predict-checks .check-opt').first().click();
+    const predict = await page.locator('#predict-checks .check-result').innerText();
+    expect(predict).toContain('Both examples pass the four checks shown here');
+    expect(predict).toContain(scoped);
+    expect(predict).toContain('still predictable');
+
+    await page.locator('#scenario-2 .check-opt').first().click();
+    const right = await page.locator('#scenario-2 .check-result').innerText();
+    expect(right).toContain(scoped);
+    expect(right).toContain('four checks shown here');
+    expect(right).not.toContain('you proved it');
+    await page.locator('#scenario-2 .check-opt').last().click();
+    const wrong = await page.locator('#scenario-2 .check-result').innerText();
+    expect(wrong).toContain('passed all four checks in Step 2');
+    expect(wrong).not.toContain('every appearance check');
+
+    // The physical-source follow-up is a different question, and says so.
+    await page.locator('#scenario-5 .check-opt').first().click();
+    const source = await page.locator('#scenario-5 .check-result').innerText();
+    expect(source).toContain('different question from whether the displayed bytes look random');
+    expect(source).toContain('Noise to Numbers');
+    await page.locator('#scenario-5 .check-opt').last().click();
+    expect(await page.locator('#scenario-5 .check-result').innerText()).toContain(
+      'passes all four and is still predictable'
+    );
+
+    // The README says the same thing, and no longer claims any battery would pass.
+    const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8').replace(/\s+/g, ' ');
+    expect(readme).not.toContain('any battery');
+    expect(readme).not.toContain('not to a statistical battery');
+    expect(readme).toContain('Both examples pass the four checks shown here.');
+    expect(readme).toContain(
+      "These checks describe the displayed bytes; they don't tell you how the seed was chosen."
+    );
   });
 
   test('the real-world line is scoped to what really happened', async ({ page }) => {

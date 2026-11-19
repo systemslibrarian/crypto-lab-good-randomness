@@ -66,12 +66,12 @@ const QUESTIONS: readonly Question[] = [
       'Before you look: will the checks be able to tell the two keys apart?',
     options: [
       {
-        label: 'No — both will pass everything',
+        label: 'No — both will pass all four',
         correct: true,
         because:
-          'Right. The seeded one is a real stream cipher’s output, and that output is ' +
-          'indistinguishable from random to anybody without the key. No check of the bytes can ' +
-          'see the difference, because the difference is not in the bytes.',
+          'Right. Both examples pass the four checks shown here. These checks describe the ' +
+          'displayed bytes; they don’t tell you how the seed was chosen. The PIN-seeded ' +
+          'example is still predictable — Step 3 shows how.',
       },
       {
         label: 'Yes — the seeded one will look worse somehow',
@@ -142,19 +142,20 @@ const QUESTIONS: readonly Question[] = [
         label: 'That the output has no obvious pattern — and nothing about the seed',
         correct: true,
         because:
-          'Right, and you proved it in Step 2. A test battery examines output. A guessable seed ' +
-          'is not a property of the output — it is a property of the process that made it, ' +
-          'and the output of a good cipher looks the same either way. Passing is necessary and ' +
-          'nowhere near sufficient.',
+          'Right. Tests like these describe the bytes they were shown; they don’t tell you how ' +
+          'the seed was chosen, which is a property of the process that made the output. ' +
+          'Step 2 showed one case of it: both examples pass the four checks shown here, and ' +
+          'the PIN-seeded example is still predictable. Passing tells you the tests found no ' +
+          'pattern they look for — not that the seed was hard to guess.',
       },
       {
         label: 'That the generator is safe to use for keys',
         correct: false,
         because:
-          'No. The seeded generator on this page passed every appearance check in Step 2, and ' +
-          'its key took ten thousand tries. Tests that examine the output cannot see where the ' +
-          'output started \u2014 the test that WOULD have caught it is the one Step 3 runs, ' +
-          'which ignores the output and tries the starting points instead.',
+          'No. The PIN-seeded generator on this page passed all four checks in Step 2, and ' +
+          'its key took ten thousand tries. Those checks describe the displayed bytes; they ' +
+          'don\u2019t tell you how the seed was chosen \u2014 what caught it here is Step 3, ' +
+          'which tries the starting points instead.',
       },
     ],
   },
@@ -184,6 +185,39 @@ const QUESTIONS: readonly Question[] = [
           'in cost: ten thousand tries could be made to take days instead of a moment. It ' +
           'still would not make them fewer than ten thousand, which is why it is a brake and ' +
           'not a fix.',
+      },
+    ],
+  },
+  {
+    /*
+     * A DIFFERENT QUESTION FROM "DO THE BYTES LOOK RANDOM".
+     *
+     * Kept as a pointer, not a lesson: this page does not assess physical sources,
+     * and the answer sends the reader to the lab that does.
+     */
+    host: 'scenario-5',
+    prompt:
+      'Suppose the randomness came from a new physical noise source instead. What evidence ' +
+      'would you ask for?',
+    options: [
+      {
+        label: 'How the raw source behaves, how it behaves after restarts, and how failures are caught',
+        correct: true,
+        because:
+          'Right. That is a different question from whether the displayed bytes look random. ' +
+          'You would want to understand the raw noise before any processing, check that the ' +
+          'source does not repeat itself after a restart, and have it monitored for failures ' +
+          'while it runs. Noise to Numbers, linked at the foot of this page, is the lab about ' +
+          'assessing a physical source.',
+      },
+      {
+        label: 'That its output passes the four checks on this page',
+        correct: false,
+        because:
+          'Not enough. The four checks describe the bytes they were shown; they don\u2019t tell ' +
+          'you how the source produced them, whether it starts from the same place after a ' +
+          'restart, or whether it has quietly failed. The PIN-seeded example on this page ' +
+          'passes all four and is still predictable.',
       },
     ],
   },
