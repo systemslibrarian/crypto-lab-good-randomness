@@ -291,7 +291,8 @@ export function mountPanel3(): void {
             `And it is worse than one key. Those ${fmt(outcome.tried)} candidates are not a ` +
               'sample: they are every four-digit PIN there is, so the search did not find ' +
               'one key — it worked out the key for every PIN a program could have started ' +
-              'from, and then noticed which one was yours.',
+              'from, and then noticed which one was yours. This demo picked from the four PINs on screen. ' +
+              'Checking that disclosed shortlist would take at most four tries.',
           ],
         },
         [

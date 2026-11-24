@@ -85,8 +85,8 @@ Three more things the lab is explicit about in-page:
    all** until Step 3 resolves it.
 3. **Step 2a — Do those checks do anything?** The same four, run over a counter. Two of them
    catch it and name the pattern.
-4. **Step 2b — Which one is guessable?** A one-in-two guess, and the page says it is one in two
-   whichever way you answer.
+4. **Step 2b — Which one is guessable?** The headings disclose the sources. Either answer leads
+   back to what the four sample measurements can establish.
 5. **Step 3 — Your guess first.** The seeded generator started at one of four candidate PINs,
    shown on the page. Pick one. A hit rebuilds the key and opens the message; a miss is painted
    *neutral*, because ruling out one number establishes nothing.
@@ -100,8 +100,8 @@ Three more things the lab is explicit about in-page:
    sealed it, so the failure is demonstrably the search's and not the cipher's, and it says
    plainly that *this* attack found nothing rather than that none could.
 8. **The repair, as a comparison.** Finishing both halves draws a five-row table: same cipher,
-   same key length, same four checks applied — and one row that differs, which is where the key
-   started. Keep the encryption, change the starting point. It is not drawn until both
+   same key length, the actual check totals for each sample, the starting point, and the
+   observed result. Keep the encryption, change the starting point. It is not drawn until both
    experiments have actually run.
 9. **The repaint.** The moment a recovery succeeds, Step 2 re-renders and marks the column it
    recovered. The thing you could not read becomes readable only after something else told you

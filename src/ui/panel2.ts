@@ -373,7 +373,7 @@ export function mountPanel2(): void {
   }
 
   /**
-   * "Which one is which?" — a guess with a one-in-two chance, and the page says so.
+   * The sample labels identify each source; this is a reading exercise.
    *
    * It is here because a reader who commits to an answer and finds out they were
    * guessing has learnt the panel's lesson in a way that reading it cannot teach. The
@@ -420,13 +420,11 @@ export function mountPanel2(): void {
       el('span', { class: 'pill-why' }, [
         right
           ? 'Source B is the seeded one, and the heading above it says so: this was not a ' +
-            'blind test. That is the question worth sitting with — could the BYTES alone ' +
-            'have told you? Cover the two headings and nothing in either column separates ' +
-            'them. Real keys arrive without headings.'
+            'blind test. The four checks measure patterns in this sample. A flagged row can ' +
+            'also occur by chance in a draw from the browser.'
           : 'Source B is the seeded one, and its heading says so — so this was not even a ' +
-            'guess from the bytes. Worth noticing how little getting it wrong costs you: ' +
-            'the two columns pass the same checks, so there was never anything in them to ' +
-            'read. Real keys arrive without headings.',
+            'guess from the bytes. The rows report the patterns the checks found in each ' +
+            'sample. They cannot identify how the seed was chosen. Real keys arrive without headings.',
       ])
     );
   }
