@@ -28,6 +28,7 @@
  * of 10000, 1500 of 10000" over and over is worse than no progress at all.
  */
 import { searchPins, trySeed } from '../crypto/recover';
+import { allPassed, passedCount, runChecks } from '../crypto/looksRandom';
 import { unseal } from '../crypto/cipher';
 import { PIN_DIGITS, PIN_SPACE, seededKey } from '../crypto/seeded';
 import { toGroupedHex } from '../crypto/bytes';
@@ -267,20 +268,20 @@ export function mountPanel3(): void {
         return;
       }
       state.recovered = found;
+      const sourceBPassed = allPassed(runChecks(found.keyBytes));
       render(
         'recovered',
         {
           marker: 'recovered',
           tone: 'alarm',
           glyph: 'key',
-          headline: 'PASSED EVERY CHECK — AND FULLY RECOVERED',
+          headline: sourceBPassed ? 'SOURCE B PASSED EVERY CHECK — AND FULLY RECOVERED' : 'SOURCE B KEY RECOVERED',
           detail: [
             `The PIN was ${found.seed}, found on try ${fmt(found.onTry)}. All ` +
               `${fmt(outcome.tried)} candidates were then tested anyway, so you can see what ` +
               `the whole space costs: ${duration(outcome.elapsedMs)}. A stranger would have ` +
               `stopped at try ${fmt(found.onTry)}.`,
-            'Nothing was broken to do this. The cipher is correct, the key is a full 256 ' +
-              'bits, and every check in Step 2 passed. The key was rebuilt by counting.',
+            'Source B’s 256-bit key was rebuilt from its four-digit starting point. Step 2 shows the measured checks for each sample.',
             // SCOPED TO WHAT THE SWEEP ACTUALLY ENUMERATED. This said "every seed this
             // generator can be given" and "every key it will ever produce", and neither
             // is true: `seededBytes` accepts any string at all -- Step 1's recipe box
@@ -296,10 +297,9 @@ export function mountPanel3(): void {
           recoveredText(found.plaintext, found.keyBytes),
           el('p', { class: 'negative-claim' }, [NEGATIVE_CLAIM]),
           el('p', { class: 'claim-note' }, [
-            'There is no error code to show you here, and that is the exhibit. Every check on ' +
-              'this page reports success in this exact state: the four checks in Step 2 ' +
-              'passed, the decryption below worked, and the pinned cases at the bottom agree. ' +
-              'Nothing failed. The key was guessable anyway.',
+            sourceBPassed
+              ? 'There is no error code to show you here for Source B’s four sample checks or its decryption. Nothing failed in those measurements. Its key was guessable anyway.'
+              : 'At least one of Source B’s sample checks flagged a pattern. The separate decryption confirmed the candidate key.',
           ]),
           el('p', { class: 'handoff' }, [
             'Now look at ',
@@ -366,7 +366,9 @@ export function mountPanel3(): void {
                       [
                         ['Encryption', 'AES-256-GCM', 'AES-256-GCM'],
                         ['Key length', '32 bytes', '32 bytes'],
-                        ['Step 2 checks', 'All four passed', 'All four passed'],
+                        ['Step 2 checks',
+                          `${passedCount(runChecks(keys.seeded.bytes))} of 4 passed`,
+                          `${passedCount(runChecks(keys.real.bytes))} of 4 passed`],
                         [
                           'Where the key started',
                           `A ${PIN_DIGITS}-digit PIN`,

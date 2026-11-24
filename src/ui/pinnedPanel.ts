@@ -58,9 +58,9 @@ export function mountPinned(): void {
               'driving Step 1 and Step 2 really is the ChaCha20 that RFC 8439 specifies.',
             `${run.published} of the ${run.total} are published vectors from that ` +
               `specification. The other ${run.derived} are this lab’s own, and they are ` +
-              'the half with teeth: each takes a published case, changes exactly one input, ' +
-              'and requires the answer to change — so an implementation quietly ignoring ' +
-              'its nonce would pass the published cases and fail here.',
+              'paired comparisons: each changes one input to the §2.3.2 case. Several published ' +
+              'cases already use a nonzero nonce. The paired check also compares the outputs ' +
+              'before and after changing a single nonce bit.',
           ],
         }
       : {

@@ -66,10 +66,10 @@ const QUESTIONS: readonly Question[] = [
       'Before you look: will the checks be able to tell the two keys apart?',
     options: [
       {
-        label: 'No — both will pass all four',
+        label: 'No — both can pass all four',
         correct: true,
         because:
-          'Right. Both examples pass the four checks shown here. These checks describe the ' +
+          'Right. Both examples can pass the four checks shown here. A random sample can also flag a pattern by chance. These checks describe the ' +
           'displayed bytes; they don’t tell you how the seed was chosen. The PIN-seeded ' +
           'example is still predictable — Step 3 shows how.',
       },
@@ -144,7 +144,7 @@ const QUESTIONS: readonly Question[] = [
         because:
           'Right. Tests like these describe the bytes they were shown; they don’t tell you how ' +
           'the seed was chosen, which is a property of the process that made the output. ' +
-          'Step 2 showed one case of it: both examples pass the four checks shown here, and ' +
+          'Step 2 showed one case of it: both examples can pass the four checks shown here, and ' +
           'the PIN-seeded example is still predictable. Passing tells you the tests found no ' +
           'pattern they look for — not that the seed was hard to guess.',
       },

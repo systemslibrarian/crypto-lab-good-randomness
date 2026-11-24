@@ -42,9 +42,11 @@ export interface PinnedRun {
 
 export function runPinned(): PinnedRun {
   const results: CaseResult[] = [];
+  const observedBlocks = new Map<string, string>();
 
   for (const c of BLOCK_CASES) {
     const got = toHex(block(fromHex(c.keyHex), c.counter, fromHex(c.nonceHex)));
+    observedBlocks.set(c.expectHex, got);
     results.push({
       label: c.label,
       where: c.where,
@@ -79,7 +81,8 @@ export function runPinned(): PinnedRun {
     const got = toHex(
       keystream(fromHex(c.keyHex), fromHex(c.nonceHex), c.mustNotEqualHex.length / 2, c.counter)
     );
-    const differs = got !== c.mustNotEqualHex;
+    const original = observedBlocks.get(c.mustNotEqualHex);
+    const differs = original === c.mustNotEqualHex && got !== original;
     results.push({
       label: c.label,
       where: c.where,
@@ -88,8 +91,10 @@ export function runPinned(): PinnedRun {
       requirement: 'must differ',
       agreed: differs,
       observed: differs
-        ? 'produced a different answer, so this input is not being ignored'
-        : 'produced the published answer anyway, so this input is being IGNORED',
+        ? 'produced a different answer after the one-input change'
+        : original !== c.mustNotEqualHex
+          ? 'original input did not reproduce the published block; comparison is inconclusive'
+          : 'produced the original block again after the one-input change',
     });
   }
 

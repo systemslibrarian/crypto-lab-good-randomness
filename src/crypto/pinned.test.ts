@@ -7,7 +7,8 @@
  * lab's three derived cases into the published count, would leave the panel printing
  * a number nobody could challenge.
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as chacha20 from './chacha20';
 import { EXPECTED_CASE_COUNT, runPinned } from './pinned';
 import { BLOCK_CASES, MUST_DIFFER, PUBLISHED_CASE_COUNT, STREAM_CASES } from './vectors';
 
@@ -18,6 +19,20 @@ describe('the pinned run', () => {
     expect(run.total).toBe(EXPECTED_CASE_COUNT);
     expect(run.agreed).toBe(run.total);
     expect(run.results.every((r) => r.agreed)).toBe(true);
+  });
+
+  it('marks a derived comparison inconclusive when the original block disagrees', () => {
+    const original = vi.spyOn(chacha20, 'block').mockImplementation((key) => key.slice());
+    try {
+      const derived = runPinned().results.filter(row => row.kind === 'derived');
+      expect(derived).toHaveLength(MUST_DIFFER.length);
+      for (const row of derived) {
+        expect(row.agreed).toBe(false);
+        expect(row.observed).toContain('comparison is inconclusive');
+      }
+    } finally {
+      original.mockRestore();
+    }
   });
 
   it('counts published and derived cases separately', () => {

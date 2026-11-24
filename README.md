@@ -2,8 +2,8 @@
 
 A key is only a secret because nobody can guess it. This lab draws one 32-byte key from the
 browser's own CSPRNG (**`crypto.getRandomValues`**) and another from a real **ChaCha20** stream
-started at a four-digit PIN, runs the same look-random checks over both — all four pass, on both
-— and then recovers the second key by trying all 10,000 possible PINs.
+started at a four-digit PIN, applies four checks to each sample,
+and then recovers the second key by trying all 10,000 possible PINs.
 
 **Live demo:** <https://systemslibrarian.github.io/crypto-lab-good-randomness/>
 
@@ -21,7 +21,7 @@ Cryptography API) as the real source; **SHA-256** and **AES-256-GCM** through th
 subject, and a reader has to be able to open the file and see that nothing is pretending.
 
 **The problem it addresses.** A generator that starts from a guessable seed produces guessable
-keys, and nothing about the output looks wrong. Both examples pass the four checks shown here.
+keys, and nothing about the output looks wrong. Both examples can pass the four checks shown here. A fresh browser sample can also trigger a check by chance.
 These checks describe the displayed bytes; they don't tell you how the seed was chosen. The
 PIN-seeded example is still predictable.
 
@@ -34,9 +34,9 @@ system would do, and the page says both in its own words rather than only here:
 
 - the predictable generator's seed is a **four-digit PIN**, so the recovery finishes in under a
   second in front of you;
-- its **nonce is fixed at zero**, so one seed means one keystream and the recovery is possible at
-  all. A random nonce would close that particular hole and leave the lesson untouched — the key
-  would still be ten thousand guesses wide — so the page does not offer it as the remedy.
+- its **ChaCha20 nonce is fixed at zero** so a given PIN always reproduces the example.
+  Changing a public nonce changes the mapping from PINs to outputs. Each known nonce still
+  leaves only 10,000 possible PINs. AES-GCM has its own fresh public nonce.
 
 The remedy it does name is the real one: get the starting point from the operating system.
 
@@ -53,20 +53,18 @@ It is scoped to the construction on the page — these four checks, this generat
 field. "No test of output can detect a weak seed" would be a stronger claim than this page
 demonstrates.
 
-Step 3's exhaustive search reaches a state where **every check the page performs reports success
-and the key is recovered anyway**: all eight check rows in Step 2 read PASS, the decryption
-works, the pinned RFC 8439 cases agree, and the verdict reads `PASSED EVERY CHECK — AND FULLY
-RECOVERED`. There is no failure code to show, because there is no check there that could fail.
-The absence of a code is the exhibit.
+Step 3 shows that **Source B can pass all four checks and still have a guessable key**.
+Source A's sample has its own four measured results. The reference-vector panel separately
+reports whether this build agrees with the published ChaCha20 examples.
 
 Three more things the lab is explicit about in-page:
 
 - **A 256-bit key is not 256 bits of security.** Length is a ceiling on how many values are
   possible; it says nothing about how many the process could actually produce. Here: ten
   thousand.
-- **Hashing a guessable seed buys nothing.** Source B's key *is* the SHA-256 of a PIN. Ten
-  thousand inputs give ten thousand outputs; a slower hash makes ten thousand tries take longer
-  and does not make them fewer.
+- **Hashing a PIN adds no choices.** SHA-256 of the PIN supplies the ChaCha20 key.
+  The first 32 bytes of the resulting stream form Source B's AES key. At a known nonce,
+  10,000 PINs give at most 10,000 possible keys.
 - **The checks are real and they do work.** A separate panel runs the same four over a counter
   and watches two of them catch it — which is what makes their silence beside Source B
   informative rather than merely unhelpful. It also shows that an obviously broken generator
@@ -83,7 +81,7 @@ Three more things the lab is explicit about in-page:
 2. **Step 2 — Two keys, and no way to tell them apart.** Both 32 bytes, side by side in identical
    unmarked boxes, with four plain-language checks run over each: not all the same, not just
    counting, no value more than three times in a row, not lopsided. Every row prints what it
-   *measured*, not just a verdict. Both columns pass all four. **The panel carries no colour at
+   *measured*, not just a verdict. Both columns can pass all four. **The panel carries no colour at
    all** until Step 3 resolves it.
 3. **Step 2a — Do those checks do anything?** The same four, run over a counter. Two of them
    catch it and name the pattern.
@@ -102,7 +100,7 @@ Three more things the lab is explicit about in-page:
    sealed it, so the failure is demonstrably the search's and not the cipher's, and it says
    plainly that *this* attack found nothing rather than that none could.
 8. **The repair, as a comparison.** Finishing both halves draws a five-row table: same cipher,
-   same key length, same four checks passed — and one row that differs, which is where the key
+   same key length, same four checks applied — and one row that differs, which is where the key
    started. Keep the encryption, change the starting point. It is not drawn until both
    experiments have actually run.
 9. **The repaint.** The moment a recovery succeeds, Step 2 re-renders and marks the column it
@@ -123,7 +121,7 @@ Three more things the lab is explicit about in-page:
   seed matter" by letting them take a key rather than by asserting it.
 - Use it to settle the 256-bit confusion, because the lab makes "length is not strength" a
   measurement rather than a slogan.
-- Use it to question "but our RNG passes its statistical tests", because both examples pass the
+- Use it to question "but our RNG passes its statistical tests", because both examples can pass the
   four checks shown here — checks that describe the displayed bytes, not how the seed was chosen —
   and the PIN-seeded key still took ten thousand tries. The page shows that for these four checks;
   it does not claim to have run any other test.

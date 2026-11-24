@@ -17,17 +17,13 @@
  *
  * THE NONCE IS ZERO, DELIBERATELY. ChaCha20 takes a nonce, and a real stream cipher
  * deployment varies it per message. Here it is fixed at zero so that one seed means
- * one keystream, which is what makes the generator reproducible and the recovery
- * possible.
+ * one reproducible keystream in this example.
  *
  * AND VARYING IT WOULD NOT BE THE FIX, which is worth stating because it is the
  * obvious next thought. A nonce is not a secret: it travels with the ciphertext and
  * the recipient must have it, so an attacker has it too and simply includes it in
  * every candidate. Ten thousand seeds with a known nonce is still ten thousand
- * tries. The only way a varying nonce helps is if it is itself drawn from a source
- * the attacker cannot enumerate — at which point the real source is doing the work
- * and the seed was never the thing holding the system up. That is why the page
- * names the starting point as the fix and never the nonce.
+ * possibilities for each known nonce, even when that public nonce was generated randomly.
  *
  * DO NOT CONFUSE IT WITH THE OTHER NONCE ON THIS PAGE. This one is ChaCha20's, it is
  * zero, and it is internal to the generator. The one Step 3 displays as "the nonce,

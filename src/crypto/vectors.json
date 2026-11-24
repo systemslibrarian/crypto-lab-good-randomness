@@ -76,7 +76,7 @@
     {
       "label": "RFC 8439 A.1 #5",
       "where": "RFC 8439 Appendix A.1, vector 5",
-      "why": "an all-zero key with one bit set in the NONCE — so a build that ignores the nonce passes every vector above and fails this one",
+      "why": "an all-zero key with one bit set in the NONCE — so this case tests a nonzero nonce alongside the §2.3.2 example",
       "keyHex": "0000000000000000000000000000000000000000000000000000000000000000",
       "counter": 0,
       "nonceHex": "000000000000000000000002",

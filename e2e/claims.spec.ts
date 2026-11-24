@@ -200,6 +200,7 @@ test.describe('what the page says on arrival', () => {
     // The specific deliberate weakness, named: a four-digit PIN and a fixed nonce.
     expect(body).toMatch(/four-digit PIN/);
     expect(body).toMatch(/nonce is fixed at zero/);
+    expect(body).toContain('For each known nonce there are still only');
     // And the reason a toy generator was NOT used, which is the lab's whole argument.
     expect(body).toContain('the seed, not the algorithm');
   });
@@ -667,7 +668,7 @@ test.describe('Step 3: the recovery, checked by an independent route', () => {
 
     // The headline is the §4.1d shape: success and failure at once.
     await expect(page.locator('[data-verdict="recovered"] .verdict-headline')).toHaveText(
-      'PASSED EVERY CHECK — AND FULLY RECOVERED'
+      'SOURCE B PASSED EVERY CHECK — AND FULLY RECOVERED'
     );
     await expect(page.locator('[data-verdict="recovered"]')).toHaveAttribute('data-tone', 'alarm');
   });
@@ -1021,6 +1022,18 @@ test.describe('the comparison that is the remedy', () => {
   test('names the decision row, and scopes what the null result proves', async ({
     page,
   }) => {
+    // This possible source-A sample has a constant step and no high bytes.
+    // Keep the browser RNG for the other draws in the lesson.
+    await page.addInitScript(() => {
+      const original = Crypto.prototype.getRandomValues;
+      Crypto.prototype.getRandomValues = function <T extends ArrayBufferView<ArrayBuffer>>(view: T): T {
+        if (view instanceof Uint8Array && view.length === 32) {
+          for (let i = 0; i < view.length; i++) view[i] = i;
+          return view;
+        }
+        return original.call(this, view) as T;
+      };
+    });
     await boot(page, 'dark');
     witness(test.info().title, 'no-seed');
     await makeKeys(page);
@@ -1033,7 +1046,7 @@ test.describe('the comparison that is the remedy', () => {
     // CROSS-CHECK: the three rows that must read identically for both sources really do,
     // and the row that must differ really does. A table that claimed "same cipher" while
     // the two cells disagreed would pass a hardcoded assertion and fails this one.
-    for (const label of ['Encryption', 'Key length', 'Step 2 checks']) {
+    for (const label of ['Encryption', 'Key length']) {
       const cells = await rows
         .filter({ hasText: label })
         .locator('td')
@@ -1041,6 +1054,12 @@ test.describe('the comparison that is the remedy', () => {
       expect(cells, `${label} must read the same for both sources`).toHaveLength(2);
       expect(cells[0]).toBe(cells[1]);
     }
+    const checkCounts = rows.filter({ hasText: 'Step 2 checks' }).locator('td');
+    for (const [index, source] of ['seeded', 'real'].entries()) {
+      const passed = await page.locator(`[data-col="${source}"] .check-row-ok`).count();
+      await expect(checkCounts.nth(index)).toHaveText(`${passed} of 4 passed`);
+    }
+    await expect(checkCounts.nth(1)).toHaveText('2 of 4 passed');
     const started = await rows.filter({ hasText: 'Where the key started' }).locator('td').allInnerTexts();
     expect(started[0]).not.toBe(started[1]);
     const note = page.locator('#p3-noseed-out .claim-note');
@@ -1057,7 +1076,7 @@ test.describe('the comparison that is the remedy', () => {
         return b !== a;
       }).length
     )) as number;
-    expect(differing, 'two rows differ: the decision and its consequence').toBe(2);
+    expect(differing, 'the sample check counts, starting points and search results differ').toBe(3);
 
     // The null result is scoped: this attack found nothing, which is not a proof that
     // none could.
@@ -1119,7 +1138,7 @@ test.describe('the pinned cases, and what they are allowed to claim', () => {
     expect(mustDiffer).toBeGreaterThan(0);
     expect(mustMatch).toBeGreaterThan(mustDiffer);
     await expect(page.locator('[data-verdict="pinned"]')).toContainText(
-      'ignoring its nonce would pass the published cases and fail here'
+      'before and after changing a single nonce bit'
     );
   });
 
@@ -1241,7 +1260,8 @@ test.describe('the vocabulary this lab deliberately does not use', () => {
 
     await page.locator('#predict-checks .check-opt').first().click();
     const predict = await page.locator('#predict-checks .check-result').innerText();
-    expect(predict).toContain('Both examples pass the four checks shown here');
+    expect(predict).toContain('Both examples can pass the four checks shown here');
+    expect(predict).toContain('can also flag a pattern by chance');
     expect(predict).toContain(scoped);
     expect(predict).toContain('still predictable');
 
@@ -1269,7 +1289,7 @@ test.describe('the vocabulary this lab deliberately does not use', () => {
     const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8').replace(/\s+/g, ' ');
     expect(readme).not.toContain('any battery');
     expect(readme).not.toContain('not to a statistical battery');
-    expect(readme).toContain('Both examples pass the four checks shown here.');
+    expect(readme).toContain('Both examples can pass the four checks shown here.');
     expect(readme).toContain(
       "These checks describe the displayed bytes; they don't tell you how the seed was chosen."
     );
