@@ -281,7 +281,8 @@ export function mountPanel3(): void {
               `${fmt(outcome.tried)} candidates were then tested anyway, so you can see what ` +
               `the whole space costs: ${duration(outcome.elapsedMs)}. A stranger would have ` +
               `stopped at try ${fmt(found.onTry)}.`,
-            'Source B’s 256-bit key was rebuilt from its four-digit starting point. Step 2 shows the measured checks for each sample.',
+            'Nothing was broken to do this. Source B’s key is a full 256 bits, and its starting point was a four-digit PIN. ' +
+              'Step 2 shows the measured checks for each sample.',
             // SCOPED TO WHAT THE SWEEP ACTUALLY ENUMERATED. This said "every seed this
             // generator can be given" and "every key it will ever produce", and neither
             // is true: `seededBytes` accepts any string at all -- Step 1's recipe box
