@@ -142,8 +142,7 @@ watch it find nothing. Everything runs in your browser; nothing is sent anywhere
 ## What Can Go Wrong
 
 - **Seeding from the clock.** The failure this lab models most directly. If an attacker can
-  narrow the moment to a day, that is 86 million milliseconds — fewer tries than a six-character
-  password, against a key that is still 256 bits long.
+  narrow the seed to a 24-hour window at millisecond resolution, there are 86,400,000 possible timestamps. A 256-bit output still comes from that same set of possible starting values.
 - **Seeding from a PID, a counter, or a serial number.** Same shape, usually a smaller space.
 - **Hashing the seed and calling it fixed.** Addressed in-page, because it is the most common
   objection: a hash spreads a value out, it does not create choices that were never there.
@@ -171,9 +170,7 @@ watch it find nothing. Everything runs in your browser; nothing is sent anywhere
 
 ## Real-World Usage
 
-ChaCha20 is the stream cipher in TLS 1.3 and WireGuard; `crypto.getRandomValues` is what your
-browser uses for its own key generation, sitting on the operating system's generator, which is
-seeded from physical events the machine measured.
+ChaCha20 supplies the stream cipher in ChaCha20-Poly1305, an authenticated-encryption option in TLS 1.3 and the construction used in WireGuard. This lab requests cryptographically strong random bytes through the browser’s `crypto.getRandomValues` API. The browser and operating system manage the underlying randomness source.
 
 Real TLS and SSH hosts have shipped duplicate and guessable keys, with no flaw in the
 cryptography and nothing visibly wrong in the keys themselves — the generators simply had too
