@@ -197,9 +197,8 @@ suites against the production build.
 
 ## Build & Verify
 
-**68 unit tests** (8 files) + **41 claims tests** + **3 accessibility drives** + **10 pinned
-vectors re-derived by an independent implementation on every build** + **10 mutations, all
-killed**.
+The suite includes unit tests, browser claims tests, accessibility checks, **10 pinned
+vectors re-derived by an independent implementation on every build**, and **10 mutation checks**.
 
 **Correctness, in three independent layers.**
 
